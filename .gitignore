@@ -1,0 +1,49 @@
+node_modules/
+dist/
+build/
+.next/
+out/
+coverage/
+.nyc_output/
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Local storage (contents of LOCAL_STORAGE_PATH should never be committed)
+storage/
+uploads/
+processed/
+output/
+reports/
+
+# TypeORM / build artefacts
+*.tsbuildinfo

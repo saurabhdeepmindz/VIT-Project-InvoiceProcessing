@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invoice Processing Platform — UI Wireframes | Deepmindz Innovations</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* =====================================================
+   DESIGN TOKENS
+   ===================================================== */
+:root {
+  --navy:       #0B1F35;
+  --navy-700:   #152D47;
+  --navy-600:   #1F4E79;
+  --blue-500:   #2E75B6;
+  --blue-300:   #5B9BD5;
+  --blue-100:   #DBEAFE;
+  --orange-600: #E65100;
+  --orange-500: #F57C00;
+  --orange-300: #FF9800;
+  --orange-100: #FFF3E0;
+  --white:      #FFFFFF;
+  --gray-50:    #F7F9FC;
+  --gray-100:   #EEF2F7;
+  --gray-200:   #D8E3EE;
+  --gray-400:   #94B0C8;
+  --gray-600:   #4A6780;
+  --gray-800:   #1E3347;
+  --green-500:  #2E7D32;
+  --green-100:  #E8F5E9;
+  --red-500:    #C62828;
+  --red-100:    #FFEBEE;
+  --amber-500:  #E65100;
+  --amber-100:  #FFF8E1;
+  --sidebar-w:  252px;
+  --header-h:   58px;
+  --nav-h:      64px;
+  --radius-sm:  6px;
+  --radius:     10px;
+  --radius-lg:  14px;
+  --shadow-sm:  0 1px 4px rgba(11,31,53,.08);
+  --shadow:     0 2px 12px rgba(11,31,53,.12);
+  --shadow-lg:  0 8px 32px rgba(11,31,53,.20);
+  --fh:         'Space Grotesk', sans-serif;
+  --fb:         'DM Sans', sans-serif;
+}
+
+/* =====================================================
+   RESET & BASE
+   ===================================================== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px;-webkit-font-smoothing:antialiased}
+body{font-family:var(--fb);background:var(--navy);color:var(--gray-800);min-height:100vh;overflow-x:hidden}
+button{font-family:var(--fb);cursor:pointer}
+input,select,textarea{font-family:var(--fb)}
+a{text-decoration:none;color:inherit}
+code{font-family:'Courier New',monospace;background:var(--gray-100);padding:2px 6px;border-radius:4px;font-size:.9em}
+
+/* =====================================================
+   SCREENS
+   ===================================================== */
+.screen{display:none;min-height:100vh;flex-direction:column;background:var(--gray-50);padding-bottom:var(--nav-h)}
+.screen.active{display:flex}
+.screen.login-screen{background:var(--navy);padding-bottom:0}
+
+/* =====================================================
+   DEEPMINDZ LOGO COMPONENT
+   ===================================================== */
+.dm-logo{display:inline-flex;align-items:center;gap:10px;cursor:default;user-select:none}
+.dm-logo-mark{flex-shrink:0}
+.dm-logo-text{display:flex;flex-direction:column;line-height:1.1}
+.dm-logo-name{font-family:var(--fh);font-size:14px;font-weight:700;letter-spacing:.01em;color:var(--white)}
+.dm-logo-sub{font-size:9.5px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--orange-300);margin-top:1px}
+.dm-logo.dark .dm-logo-name{color:var(--navy-600)}
+.dm-logo.dark .dm-logo-sub{color:var(--orange-600)}
+
+/* =====================================================
+   APP HEADER
+   ===================================================== */
+.app-header{
+  height:var(--header-h);background:var(--navy);
+  display:flex;align-items:center;padding:0 20px;gap:14px;
+  position:sticky;top:0;z-index:200;flex-shrink:0;
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+.header-divider{width:1px;height:22px;background:rgba(255,255,255,.12);flex-shrink:0}
+.header-page-label{font-family:var(--fh);font-size:12px;font-weight:600;color:var(--gray-400);letter-spacing:.06em;text-transform:uppercase;flex:1}
+.hdr-icon-btn{
+  width:32px;height:32px;border-radius:50%;
+  background:rgba(255,255,255,.07);border:none;color:var(--gray-400);
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s,color .15s;
+}
+.hdr-icon-btn:hover{background:rgba(255,255,255,.14);color:white}
+.notif-wrap{position:relative}
+.notif-bubble{
+  position:absolute;top:-2px;right:-2px;
+  width:15px;height:15px;border-radius:50%;
+  background:var(--orange-600);color:white;
+  font-size:8px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid var(--navy);
+}
+.user-pill{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.08);border-radius:20px;
+  padding:4px 12px 4px 4px;cursor:pointer;
+  transition:background .15s;border:none;
+}
+.user-pill:hover{background:rgba(255,255,255,.13)}
+.user-avatar{
+  width:26px;height:26px;border-radius:50%;
+  background:var(--orange-600);color:white;
+  font-size:10px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+}
+.user-name{font-size:12px;font-weight:600;color:var(--white)}
+.hamburger{
+  display:none;background:none;border:none;
+  color:white;padding:4px;border-radius:6px;
+}
+
+/* =====================================================
+   SIDEBAR
+   ===================================================== */
+.app-body{display:flex;flex:1;overflow:hidden;min-height:calc(100vh - var(--header-h) - var(--nav-h))}
+.sidebar{
+  width:var(--sidebar-w);background:var(--navy-700);
+  flex-shrink:0;display:flex;flex-direction:column;
+  overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;
+}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+.nav-group{padding:10px 0}
+.nav-group-label{
+  font-size:9.5px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--gray-400);
+  padding:6px 18px 8px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 18px;color:rgba(255,255,255,.60);
+  font-size:13px;font-weight:500;
+  border-left:3px solid transparent;
+  transition:all .15s;cursor:pointer;
+}
+.nav-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9)}
+.nav-item.active{
+  background:rgba(46,117,182,.22);
+  color:white;border-left-color:var(--orange-600);
+}
+.nav-item svg{flex-shrink:0;opacity:.7}
+.nav-item.active svg{opacity:1}
+.nav-count{
+  margin-left:auto;background:var(--orange-600);
+  color:white;font-size:9px;font-weight:800;
+  padding:1px 6px;border-radius:10px;
+}
+.sidebar-bottom{margin-top:auto;padding:12px 0;border-top:1px solid rgba(255,255,255,.07)}
+.main-area{flex:1;overflow-y:auto;background:var(--gray-50)}
+
+/* =====================================================
+   PAGE HEADER
+   ===================================================== */
+.page-hdr{
+  padding:24px 28px 18px;background:white;
+  border-bottom:1px solid var(--gray-200);
+  display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;
+}
+.page-hdr-left{flex:1;min-width:180px}
+.breadcrumb{
+  display:flex;align-items:center;gap:5px;
+  font-size:11.5px;color:var(--gray-400);margin-bottom:5px;
+}
+.breadcrumb .bc-link{color:var(--blue-500);cursor:pointer;font-weight:500}
+.breadcrumb .bc-link:hover{text-decoration:underline}
+.page-hdr h1{
+  font-family:var(--fh);font-size:20px;font-weight:700;
+  color:var(--navy);line-height:1.2;
+}
+.page-hdr .page-desc{font-size:12.5px;color:var(--gray-600);margin-top:3px}
+.page-hdr-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* =====================================================
+   BUTTONS
+   ===================================================== */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 16px;border-radius:var(--radius-sm);
+  font-size:13px;font-weight:600;border:none;
+  transition:all .15s;white-space:nowrap;
+  line-height:1;
+}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:var(--orange-600);color:white;box-shadow:0 2px 8px rgba(230,81,0,.28)}
+.btn-primary:hover{background:var(--orange-500);box-shadow:0 4px 14px rgba(230,81,0,.38)}
+.btn-navy{background:var(--navy-600);color:white}
+.btn-navy:hover{background:var(--navy-700)}
+.btn-outline{background:white;color:var(--navy-600);border:1.5px solid var(--gray-200)}
+.btn-outline:hover{border-color:var(--blue-500);color:var(--blue-500);background:var(--blue-100)}
+.btn-ghost{background:transparent;color:var(--gray-600);border:none;padding:8px 10px}
+.btn-ghost:hover{background:var(--gray-100);color:var(--navy)}
+.btn-danger{background:var(--red-500);color:white}
+.btn-danger:hover{background:#b71c1c}
+.btn-success{background:var(--green-500);color:white}
+.btn-xs{padding:5px 10px;font-size:11.5px;border-radius:5px}
+.btn-sm{padding:7px 13px;font-size:12px;border-radius:6px}
+.btn-lg{padding:11px 22px;font-size:14px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* =====================================================
+   BADGES & CHIPS
+   ===================================================== */
+.badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 9px;border-radius:20px;
+  font-size:11px;font-weight:700;white-space:nowrap;
+}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.badge-uploaded  {background:#E3F2FD;color:#1565C0}
+.badge-processing{background:#FFF8E1;color:#E65100;animation:glow 2s ease-in-out infinite}
+.badge-done      {background:var(--green-100);color:var(--green-500)}
+.badge-failed    {background:var(--red-100);color:var(--red-500)}
+.badge-pending   {background:var(--gray-100);color:var(--gray-600)}
+.badge-partial   {background:#FFF3E0;color:#E65100}
+.badge-extracted {background:var(--green-100);color:var(--green-500)}
+.badge-running   {background:#FFF3E0;color:#E65100;animation:glow 2s ease-in-out infinite}
+.badge-info      {background:var(--blue-100);color:var(--navy-600)}
+@keyframes glow{0%,100%{opacity:1}50%{opacity:.65}}
+
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10.5px;font-weight:700;letter-spacing:.03em}
+.tag-navy  {background:var(--navy-600);color:white}
+.tag-orange{background:var(--orange-600);color:white}
+.tag-blue  {background:var(--blue-500);color:white}
+.tag-gray  {background:var(--gray-200);color:var(--gray-600)}
+.tag-green {background:var(--green-100);color:var(--green-500)}
+
+/* =====================================================
+   CARDS
+   ===================================================== */
+.card{background:white;border-radius:var(--radius);border:1px solid var(--gray-200);box-shadow:var(--shadow-sm)}
+.card-hdr{
+  padding:14px 20px 12px;border-bottom:1px solid var(--gray-100);
+  display:flex;align-items:center;gap:10px;
+}
+.card-hdr h3{font-family:var(--fh);font-size:13.5px;font-weight:700;color:var(--navy);flex:1}
+.card-body{padding:18px 20px}
+.card-footer{padding:12px 20px;border-top:1px solid var(--gray-100);background:var(--gray-50)}
+
+/* =====================================================
+   METRIC CARDS
+   ===================================================== */
+.metrics-row{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(165px,1fr));
+  gap:14px;padding:20px 28px;
+}
+.metric-card{
+  background:white;border-radius:var(--radius);
+  border:1px solid var(--gray-200);padding:16px 18px;
+  box-shadow:var(--shadow-sm);transition:box-shadow .2s,transform .2s;
+  cursor:default;
+}
+.metric-card:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
+.mc-icon{
+  width:36px;height:36px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;margin-bottom:10px;
+}
+.mc-icon-blue   {background:var(--blue-100);color:var(--blue-500)}
+.mc-icon-orange {background:var(--orange-100);color:var(--orange-600)}
+.mc-icon-green  {background:var(--green-100);color:var(--green-500)}
+.mc-icon-navy   {background:var(--gray-100);color:var(--navy-600)}
+.mc-icon-red    {background:var(--red-100);color:var(--red-500)}
+.mc-val{font-family:var(--fh);font-size:26px;font-weight:700;color:var(--navy);line-height:1}
+.mc-label{font-size:11.5px;color:var(--gray-600);font-weight:500;margin-top:3px}
+.mc-delta{font-size:10.5px;font-weight:600;margin-top:4px}
+.mc-delta.up  {color:var(--green-500)}
+.mc-delta.down{color:var(--red-500)}
+.mc-delta.flat{color:var(--gray-600)}
+
+/* =====================================================
+   TABLES
+   ===================================================== */
+.tbl-wrap{
+  border-radius:var(--radius);border:1px solid var(--gray-200);
+  overflow:hidden;box-shadow:var(--shadow-sm);overflow-x:auto;
+}
+.data-tbl{width:100%;border-collapse:collapse;font-size:12.5px;min-width:600px}
+.data-tbl th{
+  background:var(--navy);color:white;
+  font-family:var(--fh);font-size:10.5px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.06em;
+  padding:11px 14px;text-align:left;white-space:nowrap;
+  position:sticky;top:0;
+}
+.data-tbl td{
+  padding:10px 14px;border-bottom:1px solid var(--gray-100);
+  color:var(--gray-800);vertical-align:middle;
+}
+.data-tbl tr:last-child td{border-bottom:none}
+.data-tbl tbody tr{transition:background .1s}
+.data-tbl tbody tr:hover td{background:rgba(46,117,182,.04)}
+.data-tbl .col-mono{font-family:'Courier New',monospace;font-size:11.5px}
+
+/* =====================================================
+   FORMS
+   ===================================================== */
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-label{font-size:12px;font-weight:700;color:var(--gray-800)}
+.form-label .req{color:var(--orange-600);margin-left:2px}
+.form-ctrl{
+  padding:9px 12px;
+  border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);
+  font-size:13px;color:var(--gray-800);background:white;
+  transition:border-color .15s,box-shadow .15s;width:100%;
+}
+.form-ctrl:focus{
+  outline:none;border-color:var(--blue-500);
+  box-shadow:0 0 0 3px rgba(46,117,182,.12);
+}
+.form-hint{font-size:11px;color:var(--gray-400)}
+.form-error{font-size:11px;color:var(--red-500);font-weight:600}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:600px){.form-row,.form-row-3{grid-template-columns:1fr}}
+
+/* =====================================================
+   PROGRESS & STEPS
+   ===================================================== */
+.step-track{display:flex;gap:0;margin-bottom:28px;max-width:560px}
+.step-item{flex:1;display:flex;flex-direction:column;align-items:center;position:relative}
+.step-item::before{
+  content:'';position:absolute;top:14px;left:calc(50% + 16px);
+  width:calc(100% - 32px);height:2px;background:var(--gray-200);z-index:0;
+}
+.step-item:last-child::before{display:none}
+.step-item.s-done::before{background:var(--green-500)}
+.step-dot{
+  width:28px;height:28px;border-radius:50%;
+  border:2px solid var(--gray-200);background:white;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:var(--gray-400);
+  z-index:1;transition:all .3s;
+}
+.step-item.s-done .step-dot{background:var(--green-500);border-color:var(--green-500);color:white}
+.step-item.s-active .step-dot{background:var(--orange-600);border-color:var(--orange-600);color:white;box-shadow:0 0 0 4px rgba(230,81,0,.18)}
+.step-lbl{font-size:10.5px;color:var(--gray-400);margin-top:5px;text-align:center;font-weight:500;white-space:nowrap}
+.step-item.s-active .step-lbl,.step-item.s-done .step-lbl{color:var(--gray-800)}
+
+.progress-track{background:var(--gray-200);border-radius:6px;height:7px;overflow:hidden}
+.progress-fill{height:100%;border-radius:6px;transition:width .4s ease}
+.pf-blue  {background:linear-gradient(90deg,var(--blue-500),var(--blue-300))}
+.pf-orange{background:linear-gradient(90deg,var(--orange-600),var(--orange-300))}
+.pf-green {background:var(--green-500)}
+.pf-multi {background:linear-gradient(90deg,var(--blue-500),var(--orange-600))}
+
+/* =====================================================
+   CONFIDENCE
+   ===================================================== */
+.conf-wrap{display:flex;align-items:center;gap:7px;min-width:120px}
+.conf-bar{flex:1;height:5px;background:var(--gray-200);border-radius:3px;overflow:hidden}
+.conf-fill{height:100%;border-radius:3px}
+.cf-h{background:var(--green-500)}
+.cf-m{background:var(--orange-500)}
+.cf-l{background:var(--red-500)}
+.cf-num{font-size:11px;font-weight:700;color:var(--gray-600);min-width:30px;text-align:right}
+
+/* =====================================================
+   ALERTS & BANNERS
+   ===================================================== */
+.alert{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:11px 14px;border-radius:var(--radius-sm);
+  font-size:12.5px;border:1px solid;
+}
+.alert svg{flex-shrink:0;margin-top:1px}
+.alert-info   {background:var(--blue-100);border-color:#93C5FD;color:#1E40AF}
+.alert-success{background:var(--green-100);border-color:#A7F3D0;color:var(--green-500)}
+.alert-warn   {background:var(--amber-100);border-color:#FCD34D;color:#92400E}
+.alert-error  {background:var(--red-100);border-color:#FCA5A5;color:var(--red-500)}
+.alert a{font-weight:700;text-decoration:underline;cursor:pointer}
+
+/* =====================================================
+   DROPZONE
+   ===================================================== */
+.dropzone{
+  border:2px dashed var(--gray-200);border-radius:var(--radius);
+  padding:32px 20px;text-align:center;cursor:pointer;
+  transition:border-color .2s,background .2s;background:var(--gray-50);
+}
+.dropzone:hover{border-color:var(--blue-500);background:rgba(46,117,182,.03)}
+.dropzone.dz-active{border-color:var(--orange-600);background:rgba(230,81,0,.03)}
+.dz-icon{width:48px;height:48px;border-radius:12px;background:var(--gray-100);color:var(--gray-400);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.dz-title{font-family:var(--fh);font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.dz-sub{font-size:12px;color:var(--gray-600)}
+.dz-hint{font-size:11px;color:var(--gray-400);margin-top:6px}
+
+/* =====================================================
+   FILE CHIPS
+   ===================================================== */
+.file-chip{
+  display:flex;align-items:center;gap:10px;
+  background:white;border:1px solid var(--gray-200);
+  border-radius:var(--radius-sm);padding:8px 12px;
+}
+.file-chip-icon{
+  width:32px;height:32px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9.5px;font-weight:800;color:white;flex-shrink:0;
+}
+.fci-csv{background:var(--green-500)}
+.fci-jpg,.fci-png{background:var(--blue-500)}
+.fci-pdf{background:var(--orange-600)}
+.file-chip-info{flex:1;min-width:0}
+.file-chip-name{font-size:12.5px;font-weight:600;color:var(--navy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-chip-meta{font-size:10.5px;color:var(--gray-400);margin-top:1px}
+.file-chip-remove{background:none;border:none;color:var(--gray-400);padding:2px;border-radius:4px;transition:color .15s}
+.file-chip-remove:hover{color:var(--red-500)}
+
+/* =====================================================
+   FIELDS GRID (EDA)
+   ===================================================== */
+.fields-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px}
+.field-tile{
+  background:var(--gray-50);border-radius:var(--radius-sm);
+  border:1px solid var(--gray-200);padding:10px 12px;
+}
+.ft-label{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-400);margin-bottom:3px}
+.ft-value{font-size:13.5px;font-weight:600;color:var(--gray-800)}
+.ft-value.ft-null{font-style:italic;color:var(--red-500);font-weight:400;font-size:12.5px}
+.ft-conf{font-size:10px;margin-top:3px;font-weight:600}
+.ft-conf.fc-h{color:var(--green-500)}
+.ft-conf.fc-m{color:var(--orange-500)}
+.ft-conf.fc-l{color:var(--red-500)}
+
+/* =====================================================
+   AUDIT TIMELINE
+   ===================================================== */
+.timeline{display:flex;flex-direction:column}
+.tl-row{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-100)}
+.tl-row:last-child{border-bottom:none}
+.tl-side{display:flex;flex-direction:column;align-items:center;gap:0;flex-shrink:0;padding-top:2px}
+.tl-node{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;flex-shrink:0}
+.tl-connector{width:2px;flex:1;background:var(--gray-200);min-height:12px;margin:2px auto}
+.tl-body{flex:1;min-width:0}
+.tl-title{font-size:12.5px;font-weight:700;color:var(--navy)}
+.tl-meta{font-size:11px;color:var(--gray-400);margin-top:1px}
+.tl-code{font-size:10.5px;color:var(--gray-600);background:var(--gray-100);border-radius:4px;padding:3px 7px;margin-top:5px;font-family:'Courier New',monospace;word-break:break-all}
+
+/* =====================================================
+   CHARTS (visual placeholders)
+   ===================================================== */
+.bar-chart{display:flex;align-items:flex-end;gap:8px;height:100px;padding:0 4px}
+.bar{border-radius:4px 4px 0 0;min-width:18px;flex:1;transition:opacity .2s;cursor:pointer}
+.bar:hover{opacity:.8}
+.bar-blue  {background:linear-gradient(to top,var(--blue-500),var(--blue-300))}
+.bar-orange{background:linear-gradient(to top,var(--orange-600),var(--orange-300))}
+.bar-green {background:linear-gradient(to top,var(--green-500),#66BB6A)}
+.chart-x{display:flex;gap:8px;padding:4px 4px 0;font-size:9.5px;color:var(--gray-400);justify-content:space-around}
+.chart-legend{display:flex;gap:14px;font-size:11px;color:var(--gray-600);flex-wrap:wrap}
+.chart-legend span{display:flex;align-items:center;gap:5px}
+.legend-dot{width:8px;height:8px;border-radius:50%}
+
+/* =====================================================
+   DONUT CHART
+   ===================================================== */
+.donut-wrap{position:relative;width:120px;height:120px}
+.donut-wrap svg{transform:rotate(-90deg)}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.donut-pct{font-family:var(--fh);font-size:20px;font-weight:700;color:var(--navy)}
+.donut-lbl{font-size:10px;color:var(--gray-400);font-weight:500}
+
+/* =====================================================
+   REPORT CARDS
+   ===================================================== */
+.report-type-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.report-type-card{
+  background:white;border:1.5px solid var(--gray-200);
+  border-radius:var(--radius);padding:18px;cursor:pointer;
+  transition:border-color .15s,box-shadow .15s,transform .15s;
+}
+.report-type-card:hover{border-color:var(--blue-300);box-shadow:var(--shadow);transform:translateY(-2px)}
+.report-type-card.rtc-active{border-color:var(--orange-600);background:rgba(230,81,0,.03)}
+.rtc-icon{
+  width:42px;height:42px;border-radius:10px;
+  background:var(--navy);color:white;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:12px;
+}
+.rtc-name{font-family:var(--fh);font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.rtc-desc{font-size:11.5px;color:var(--gray-600);line-height:1.4}
+
+/* =====================================================
+   PAGINATION
+   ===================================================== */
+.pagination{display:flex;align-items:center;gap:6px;font-size:12px}
+.page-btn{
+  width:28px;height:28px;border-radius:6px;border:1.5px solid var(--gray-200);
+  background:white;color:var(--gray-600);font-size:12px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:all .15s;
+}
+.page-btn:hover,.page-btn.active{background:var(--navy-600);color:white;border-color:var(--navy-600)}
+
+/* =====================================================
+   DIVIDERS & SECTIONS
+   ===================================================== */
+.page-content{padding:22px 28px}
+.page-section{margin-bottom:24px}
+.section-hdr{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:12px;
+}
+.section-hdr h3{font-family:var(--fh);font-size:13px;font-weight:700;color:var(--navy)}
+.section-hdr::after{content:'';flex:1;height:1px;background:var(--gray-200)}
+.divider{border:none;border-top:1px solid var(--gray-100);margin:18px 0}
+
+/* =====================================================
+   SUMMARY ROW STRIP
+   ===================================================== */
+.summary-strip{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(135px,1fr));
+  gap:0;background:white;border-bottom:1px solid var(--gray-200);
+}
+.sum-stat{
+  padding:14px 20px;border-right:1px solid var(--gray-200);
+  text-align:center;
+}
+.sum-stat:last-child{border-right:none}
+.ss-val{font-family:var(--fh);font-size:22px;font-weight:700;color:var(--navy)}
+.ss-lbl{font-size:10.5px;color:var(--gray-600);font-weight:500;margin-top:2px}
+
+/* =====================================================
+   LOGIN PAGE
+   ===================================================== */
+.login-wrap{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:24px;position:relative;overflow:hidden;background:var(--navy);
+}
+.login-bg-art{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 70% 60% at 15% 50%,rgba(46,117,182,.22) 0%,transparent 70%),
+    radial-gradient(ellipse 50% 50% at 85% 20%,rgba(230,81,0,.14) 0%,transparent 65%),
+    radial-gradient(ellipse 40% 40% at 80% 90%,rgba(46,117,182,.12) 0%,transparent 60%);
+}
+.login-grid-bg{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+  background-size:52px 52px;
+}
+.login-card{
+  background:rgba(255,255,255,.98);border-radius:var(--radius-lg);
+  padding:38px 42px;width:100%;max-width:420px;
+  box-shadow:var(--shadow-lg);position:relative;z-index:1;
+}
+.login-card-logo{display:flex;justify-content:center;margin-bottom:26px;padding-bottom:22px;border-bottom:1px solid var(--gray-100)}
+.login-heading{text-align:center;margin-bottom:22px}
+.login-heading h2{font-family:var(--fh);font-size:20px;font-weight:700;color:var(--navy)}
+.login-heading p{font-size:12.5px;color:var(--gray-600);margin-top:4px}
+.login-tabs{display:flex;border:1.5px solid var(--gray-200);border-radius:8px;overflow:hidden;margin-bottom:20px}
+.login-tab{
+  flex:1;padding:8px;text-align:center;
+  font-size:12px;font-weight:700;color:var(--gray-600);
+  background:white;border:none;cursor:pointer;transition:all .15s;
+}
+.login-tab.active{background:var(--navy);color:white}
+.forgot-link{font-size:12px;color:var(--blue-500);text-align:right;cursor:pointer;margin-top:2px;font-weight:600}
+.forgot-link:hover{color:var(--orange-600)}
+
+/* =====================================================
+   BOTTOM NAVIGATION (FIXED)
+   ===================================================== */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);
+  background:var(--navy);border-top:1px solid rgba(255,255,255,.1);
+  display:flex;align-items:center;padding:0 20px;gap:14px;z-index:300;
+}
+.bnav-arrow{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.15);
+  color:white;padding:9px 16px;border-radius:8px;
+  font-family:var(--fb);font-size:12.5px;font-weight:700;
+  transition:all .2s;white-space:nowrap;
+}
+.bnav-arrow:hover:not(:disabled){
+  background:var(--orange-600);
+  border-color:var(--orange-600);
+  transform:translateY(-1px);
+  box-shadow:0 4px 14px rgba(230,81,0,.35);
+}
+.bnav-arrow:disabled{opacity:.25;cursor:not-allowed;transform:none}
+.bnav-center{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bnav-dots{display:flex;gap:5px;align-items:center}
+.bnav-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:rgba(255,255,255,.25);border:none;cursor:pointer;
+  transition:all .2s;padding:0;
+}
+.bnav-dot.active{background:var(--orange-600);width:20px;border-radius:3px}
+.bnav-info{
+  font-size:10.5px;color:rgba(255,255,255,.45);text-align:center;
+  line-height:1.3;
+}
+.bnav-info strong{color:rgba(255,255,255,.80);font-weight:600}
+
+/* =====================================================
+   OVERLAY & SIDEBAR MOBILE
+   ===================================================== */
+.sidebar-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.55);z-index:199;
+}
+.sidebar-overlay.active{display:block}
+@media(max-width:820px){
+  :root{--sidebar-w:234px}
+  .sidebar{
+    position:fixed;left:calc(-1 * var(--sidebar-w));
+    top:var(--header-h);height:calc(100vh - var(--header-h) - var(--nav-h));
+    z-index:200;transition:left .25s;box-shadow:var(--shadow-lg);
+  }
+  .sidebar.open{left:0}
+  .hamburger{display:flex}
+  .page-hdr{padding:18px 18px 14px}
+  .page-content{padding:16px 18px}
+  .metrics-row{padding:14px 18px}
+  .summary-strip{grid-template-columns:repeat(3,1fr)}
+  .bottom-nav{padding:0 12px;gap:8px}
+  .bnav-arrow{padding:8px 12px;font-size:12px}
+}
+@media(max-width:500px){
+  .login-card{padding:28px 22px}
+  .metrics-row{grid-template-columns:1fr 1fr}
+  .fields-grid{grid-template-columns:1fr 1fr}
+  .form-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- ════════════════════════════════════════════════
+     SVG LOGO — reusable inline component
+     ════════════════════════════════════════════════ -->
+<template id="logo-svg">
+  <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="38" height="38" rx="9" fill="#1F4E79"/>
+    <path d="M6.5 19C6.5 12.1 12.1 6.5 19 6.5C23.45 6.5 27.35 8.85 29.55 12.4L24.95 15.05C23.6 12.9 21.45 11.5 19 11.5C15.42 11.5 12.5 14.42 12.5 18C12.5 21.58 15.42 24.5 19 24.5C21.45 24.5 23.6 23.1 24.95 20.95L29.55 23.6C27.35 27.15 23.45 29.5 19 29.5C12.1 29.5 6.5 23.9 6.5 17C6.5 17.67 6.5 18.33 6.5 19Z" fill="#2E75B6"/>
+    <polygon points="19,14 24,19 19,24 14,19" fill="#E65100"/>
+    <circle cx="19" cy="19" r="3" fill="white"/>
+    <circle cx="19" cy="19" r="1.2" fill="#E65100"/>
+  </svg>
+</template>
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 1 — LOGIN / AUTHENTICATION
+     EPIC-001 | AuthController | LoginPage.tsx
+     ════════════════════════════════════════════════ -->
+<div class="screen login-screen active" id="screen-0">
+  <div class="login-wrap">
+    <div class="login-bg-art"></div>
+    <div class="login-grid-bg"></div>
+    <div class="login-card">
+
+      <div class="login-card-logo">
+        <div class="dm-logo dark">
+          <div class="dm-logo-mark">
+            <svg width="40" height="40" viewBox="0 0 38 38" fill="none">
+              <rect width="38" height="38" rx="9" fill="#1F4E79"/>
+              <path d="M6.5 19C6.5 12.1 12.1 6.5 19 6.5C23.45 6.5 27.35 8.85 29.55 12.4L24.95 15.05C23.6 12.9 21.45 11.5 19 11.5C15.42 11.5 12.5 14.42 12.5 18C12.5 21.58 15.42 24.5 19 24.5C21.45 24.5 23.6 23.1 24.95 20.95L29.55 23.6C27.35 27.15 23.45 29.5 19 29.5C12.1 29.5 6.5 23.9 6.5 17C6.5 17.67 6.5 18.33 6.5 19Z" fill="#2E75B6"/>
+              <polygon points="19,14 24,19 19,24 14,19" fill="#E65100"/>
+              <circle cx="19" cy="19" r="3" fill="white"/>
+            </svg>
+          </div>
+          <div class="dm-logo-text">
+            <span class="dm-logo-name">Deepmindz</span>
+            <span class="dm-logo-sub">Innovations</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="login-heading">
+        <h2>Welcome back</h2>
+        <p>Invoice Processing Platform · v3.0</p>
+      </div>
+
+      <div class="login-tabs">
+        <button class="login-tab active" onclick="setTab(this)">Invoice Operator</button>
+        <button class="login-tab" onclick="setTab(this)">Admin</button>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-ctrl" value="operator@deepmindz.io" placeholder="you@company.com">
+        </div>
+        <div class="form-group">
+          <input type="password" class="form-ctrl" value="••••••••" placeholder="Password">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;color:var(--gray-600)">
+              <input type="checkbox" checked> Keep me signed in
+            </label>
+            <span class="forgot-link">Forgot password?</span>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-lg" onclick="goTo(1)" style="width:100%;justify-content:center;margin-top:4px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          Sign In Securely
+        </button>
+      </div>
+      <p style="text-align:center;margin-top:16px;font-size:11px;color:var(--gray-400)">
+        Protected with JWT · Sessions expire after 15 min<br>
+        Powered by Deepmindz Innovations © 2025
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 2 — PORTAL HOME / DASHBOARD
+     Cross-cutting | MainDashboard | InvoiceBatchEntity
+     ════════════════════════════════════════════════ -->
+<div class="screen" id="screen-1">
+  <header class="app-header">
+    <button class="hamburger" onclick="toggleSidebar()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="dm-logo">
+      <div class="dm-logo-mark">
+        <svg width="32" height="32" viewBox="0 0 38 38" fill="none"><rect width="38" height="38" rx="9" fill="#2E75B6"/><polygon points="19,14 24,19 19,24 14,19" fill="#E65100"/><circle cx="19" cy="19" r="3.5" fill="white"/><circle cx="19" cy="19" r="1.4" fill="#E65100"/></svg>
+      </div>
+      <div class="dm-logo-text"><span class="dm-logo-name">Deepmindz</span><span class="dm-logo-sub">Invoice Platform</span></div>
+    </div>
+    <div class="header-divider"></div>
+    <span class="header-page-label">Home Dashboard</span>
+    <div class="notif-wrap">
+      <button class="hdr-icon-btn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
+      <div class="notif-bubble">3</div>
+    </div>
+    <button class="user-pill"><div class="user-avatar">OP</div><span class="user-name">Operator</span></button>
+  </header>
+  <div class="app-body">
+    <nav class="sidebar" id="sidebar-1">
+      <div class="nav-group">
+        <div class="nav-group-label">Navigation</div>
+        <div class="nav-item active">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Home
+        </div>
+        <div class="nav-item" onclick="goTo(2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> Upload Invoices</div>
+        <div class="nav-item" onclick="goTo(5)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Status Tracker <span class="nav-count">4</span></div>
+        <div class="nav-item" onclick="goTo(6)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> EDA Results</div>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Administration</div>
+        <div class="nav-item" onclick="goTo(4)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Preprocessing <span class="nav-count">2</span></div>
+        <div class="nav-item" onclick="goTo(7)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Operations Dashboard</div>
+        <div class="nav-item" onclick="goTo(8)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 15 21 21 15 21"/><path d="M21 21L9 9"/><polyline points="3 9 3 3 9 3"/><path d="M3 3l12 12"/></svg> Reports &amp; Export</div>
+      </div>
+      <div class="sidebar-bottom">
+        <div class="nav-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg> My Profile</div>
+        <div class="nav-item" onclick="goTo(0)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign Out</div>
+      </div>
+    </nav>
+    <main class="main-area">
+      <div class="page-hdr">
+        <div class="page-hdr-left">
+          <div class="breadcrumb"><span>Home</span></div>
+          <h1>Good morning, Invoice Operator 👋</h1>
+          <p class="page-desc">Wednesday, 16 April 2025 · 3 batches active · 2 batches require attention</p>
+        </div>
+        <div class="page-hdr-actions">
+          <button class="btn btn-primary" onclick="goTo(2)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+            Upload New Batch
+          </button>
+        </div>
+      </div>
+      <div class="summary-strip">
+        <div class="sum-stat"><div class="ss-val">142</div><div class="ss-lbl">Total Batches</div></div>
+        <div class="sum-stat"><div class="ss-val" style="color:var(--green-500)">18,432</div><div class="ss-lbl">Records Extracted</div></div>
+        <div class="sum-stat"><div class="ss-val" style="color:var(--orange-600)">3</div><div class="ss-lbl">In Progress</div></div>
+        <div class="sum-stat"><div class="ss-val" style="color:var(--red-500)">47</div><div class="ss-lbl">Error Records</div></div>
+        <div class="sum-stat"><div class="ss-val" style="color:var(--blue-500)">84.2%</div><div class="ss-lbl">Avg Confidence</div></div>
+      </div>
+      <div class="page-content">
+        <div class="alert alert-warn" style="margin-bottom:18px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div><strong>BATCH-2025-0039 failed preprocessing</strong> — 18 records have missing invoice images. <a onclick="goTo(4)">View Audit Logs →</a></div>
+        </div>
+        <div class="section-hdr"><h3>Recent Batches</h3></div>
+        <div class="tbl-wrap">
+          <table class="data-tbl">
+            <thead><tr><th>Batch ID</th><th>Uploaded</th><th>Records</th><th>Preprocessing</th><th>EDA</th><th>Avg Confidence</th><th>Turnaround</th><th style="text-align:center">Action</th></tr></thead>
+            <tbody>
+              <tr><td class="col-mono">BATCH-2025-0042</td><td>16 Apr 09:14</td><td>320</td><td><span class="badge badge-running">Running</span></td><td><span class="badge badge-pending">Pending</span></td><td style="color:var(--gray-400)">—</td><td style="color:var(--gray-400)">—</td><td style="text-align:center"><button class="btn btn-outline btn-sm" onclick="goTo(5)">Monitor</button></td></tr>
+              <tr><td class="col-mono">BATCH-2025-0041</td><td>16 Apr 08:52</td><td>320</td><td><span class="badge badge-done">Done</span></td><td><span class="badge badge-running">Running</span></td><td><div class="conf-wrap"><div class="conf-bar"><div class="conf-fill cf-m" style="width:62%"></div></div><span class="cf-num">62%</span></div></td><td>1m 24s</td><td style="text-align:center"><button class="btn btn-navy btn-sm" onclick="goTo(6)">EDA Results</button></td></tr>
+              <tr><td class="col-mono">BATCH-2025-0040</td><td>15 Apr 14:32</td><td>185</td><td><span class="badge badge-done">Done</span></td><td><span class="badge badge-done">Done</span></td><td><div class="conf-wrap"><div class="conf-bar"><div class="conf-fill cf-h" style="width:91%"></div></div><span class="cf-num">91%</span></div></td><td>3m 12s</td><td style="text-align:center"><button class="btn btn-navy btn-sm" onclick="goTo(6)">EDA Results</button></td></tr>
+              <tr><td class="col-mono">BATCH-2025-0039</td><td>15 Apr 09:08</td><td>410</td><td><span class="badge badge-failed">Failed</span></td><td><span class="badge badge-pending">Pending</span></td><td style="color:var(--gray-400)">—</td><td style="color:var(--gray-400)">—</td><td style="text-align:center"><button class="btn btn-danger btn-sm">Retry</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 3 — INVOICE UPLOAD · STEP 1 FILE SELECT
+     EPIC-002 | InvoiceController | InvoiceUploadPage
+     ════════════════════════════════════════════════ -->
+<div class="screen" id="screen-2">
+  <header class="app-header">
+    <button class="hamburger" onclick="toggleSidebar()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="dm-logo"><div class="dm-logo-mark"><svg width="32" height="32" viewBox="0 0 38 38" fill="none"><rect width="38" height="38" rx="9" fill="#2E75B6"/><polygon points="19,14 24,19 19,24 14,19" fill="#E65100"/><circle cx="19" cy="19" r="3.5" fill="white"/></svg></div><div class="dm-logo-text"><span class="dm-logo-name">Deepmindz</span><span class="dm-logo-sub">Invoice Platform</span></div></div>
+    <div class="header-divider"></div>
+    <span class="header-page-label">Upload Invoice Batch</span>
+    <button class="user-pill" style="margin-left:auto"><div class="user-avatar">OP</div><span class="user-name">Operator</span></button>
+  </header>
+  <div class="page-hdr">
+    <div class="page-hdr-left">
+      <div class="breadcrumb"><span class="bc-link" onclick="goTo(1)">Home</span><span>›</span><span>Upload Invoices</span></div>
+      <h1>Upload Invoice Batch</h1>
+      <p class="page-desc">EPIC-002 · InvoiceService.createBatch() · Supports CSV + JPG/PNG/PDF · Max 50 MB per file</p>
+    </div>
+  </div>
+  <div class="page-content">
+    <div class="step-track" style="margin:0 auto 28px">
+      <div class="step-item s-active"><div class="step-dot">1</div><div class="step-lbl">Select Files</div></div>
+      <div class="step-item"><div class="step-dot">2</div><div class="step-lbl">Validate</div></div>
+      <div class="step-item"><div class="step-dot">3</div><div class="step-lbl">Upload</div></div>
+      <div class="step-item"><div class="step-dot">4</div><div class="step-lbl">Confirm</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:920px;margin:0 auto">
+      <div>
+        <div class="section-hdr"><h3>1. CSV Data File</h3></div>
+        <div class="dropzone dz-active">
+          <div class="dz-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+          <div class="dz-title">Drop CSV file here</div>
+          <div class="dz-sub">or click to browse your computer</div>
+          <div class="dz-hint">Accepted: .csv · Max 50 MB</div>
+          <button class="btn btn-outline btn-sm" style="margin-top:12px">Browse File</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:7px;margin-top:12px">
+          <div class="file-chip">
+            <div class="file-chip-icon fci-csv">CSV</div>
+            <div class="file-chip-info"><div class="file-chip-name">invoice_batch_apr16.csv</div><div class="file-chip-meta">2.4 MB · 320 records detected</div></div>
+            <button class="file-chip-remove">✕</button>
+          </div>
+          <div class="alert alert-success" style="font-size:11.5px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            CSV validated — 320 rows, all 4 required columns present
+          </div>
+        </div>
+        <div style="margin-top:14px">
+          <div style="font-size:11px;color:var(--gray-400);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Required Columns</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">
+            <span class="tag tag-green">VehicleRegistrationNumber</span>
+            <span class="tag tag-green">CustomerMobile</span>
+            <span class="tag tag-green">InvoiceDate</span>
+            <span class="tag tag-green">ImageFileName</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="section-hdr"><h3>2. Invoice Images</h3></div>
+        <div class="dropzone">
+          <div class="dz-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+          <div class="dz-title">Drop invoice images</div>
+          <div class="dz-sub">JPG, PNG or PDF invoice scans</div>
+          <div class="dz-hint">Multiple files allowed · Max 50 MB each</div>
+          <button class="btn btn-outline btn-sm" style="margin-top:12px">Browse Images</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:12px;max-height:158px;overflow-y:auto">
+          <div class="file-chip"><div class="file-chip-icon fci-jpg">JPG</div><div class="file-chip-info"><div class="file-chip-name">INV_TY_20250401_001.jpg</div><div class="file-chip-meta">1.2 MB</div></div><button class="file-chip-remove">✕</button></div>
+          <div class="file-chip"><div class="file-chip-icon fci-jpg">JPG</div><div class="file-chip-info"><div class="file-chip-name">INV_TY_20250401_002.jpg</div><div class="file-chip-meta">890 KB</div></div><button class="file-chip-remove">✕</button></div>
+          <div class="file-chip"><div class="file-chip-icon fci-pdf">PDF</div><div class="file-chip-info"><div class="file-chip-name">INV_TY_20250401_003.pdf</div><div class="file-chip-meta">2.1 MB</div></div><button class="file-chip-remove">✕</button></div>
+        </div>
+        <p style="font-size:11.5px;color:var(--gray-600);margin-top:8px">3 of 320 images selected · 317 remaining</p>
+        <div class="alert alert-info" style="margin-top:10px;font-size:11.5px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Image filenames must match the <strong>ImageFileName</strong> column in your CSV exactly (case-sensitive).
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;max-width:920px;margin:22px auto 0;justify-content:flex-end">
+      <button class="btn btn-outline" onclick="goTo(1)">Cancel</button>
+      <button class="btn btn-primary" onclick="goTo(3)">Continue to Validation <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 4 — UPLOAD · VALIDATION & UPLOAD PROGRESS
+     EPIC-002 | InvoiceService | FileStorageService
+     ════════════════════════════════════════════════ -->
+<div class="screen" id="screen-3">
+  <header class="app-header">
+    <button class="hamburger" onclick="toggleSidebar()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="dm-logo"><div class="dm-logo-mark"><svg width="32" height="32" viewBox="0 0 38 38" fill="none"><rect width="38" height="38" rx="9" fill="#2E75B6"/><polygon points="19,14 24,19 19,24 14,19" fill="#E65100"/><circle cx="19" cy="19" r="3.5" fill="white"/></svg></div><div class="dm-logo-text"><span class="dm-logo-name">Deepmindz</span><span class="dm-logo-sub">Invoice Platform</span></div></div>
+    <div class="header-divider"></div>
+    <span class="header-page-label">Validating &amp; Uploading</span>
+    <button class="user-pill" style="margin-left:auto"><div class="user-avatar">OP</div><span class="user-name">Operator</span></button>
+  </header>
+  <div class="page-hdr">
+    <div class="page-hdr-left">
+      <div class="breadcrumb"><span class="bc-link" onclick="goTo(1)">Home</span><span>›</span><span class="bc-link" onclick="goTo(2)">Upload</span><span>›</span><span>Validating</span></div>
+      <h1>Validating &amp; Uploading Batch</h1>
+      <p class="page-desc">EPIC-002 · validateCsvStructure() → mapCsvToImages() → storeBatchFiles() → emit(invoice.uploaded)</p>
+    </div>
+  </div>
+  <div class="page-content">
+    <div class="step-track" style="margin:0 auto 28px">
+      <div class="step-item s-done"><div class="step-dot">✓</div><div class="step-lbl">Select Files</div></div>
+      <div class="step-item s-done"><div class="step-dot">✓</div><div class="step-lbl">Validate</div></div>
+      <div class="step-item s-active"><div class="step-dot">3</div><div class="step-lbl">Upload</div></div>
+      <div class="step-item"><div class="step-dot">4</div><div class="step-lbl">Confirm</div></div>
+    </div>
+    <div style="max-width:700px;margin:0 auto">
+      <div class="card">
+        <div class="card-hdr"><h3>Upload Pipeline</h3><span class="badge badge-running">In Progress</span></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:18px">
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:12.5px"><span style="font-weight:600">1. CSV Structure Validation</span><span style="color:var(--green-500);font-weight:700">✓ 320 records valid</span></div>
+            <div class="progress-track"><div class="progress-fill pf-green" style="width:100%"></div></div>
+            <div style="font-size:11px;color:var(--gray-400);margin-top:3px">All 4 required columns present · 0 invalid rows detected</div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:12.5px"><span style="font-weight:600">2. CSV → Image Mapping</span><span style="color:var(--green-500);font-weight:700">✓ 320 / 320 matched</span></div>
+            <div class="progress-track"><div class="progress-fill pf-green" style="width:100%"></div></div>
+            <div style="font-size:11px;color:var(--gray-400);margin-top:3px">InvoiceService.mapCsvToImages() · all image filenames resolved</div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:12.5px"><span style="font-weight:600">3. File Upload to S3 Storage</span><span style="color:var(--orange-600);font-weight:700">Uploading… 67%</span></div>
+            <div class="progress-track"><div class="progress-fill pf-multi" style="width:67%"></div></div>
+            <div style="font-size:11px;color:var(--gray-400);margin-top:3px">FileStorageService.upload() · 214 of 321 files · ETA ~9s</div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:12.5px"><span style="font-weight:600;color:var(--gray-400)">4. Create Batch DB Record</span><span style="color:var(--gray-400)">Waiting…</span></div>
+            <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+            <div style="font-size:11px;color:var(--gray-400);margin-top:3px">InvoiceBatchEntity · InvoiceRecordEntity bulk insert</div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:12.5px"><span style="font-weight:600;color:var(--gray-400)">5. Trigger Preprocessing Pipeline</span><span style="color:var(--gray-400)">Waiting…</span></div>
+            <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+            <div style="font-size:11px;color:var(--gray-400);margin-top:3px">EventEmitter2.emit('invoice.uploaded') → PreprocessingScheduler</div>
+          </div>
+        </div>
+        <div class="card-footer" style="display:flex;justify-content:flex-end;gap:8px">
+          <button class="btn btn-outline btn-sm" onclick="goTo(2)">← Back</button>
+          <button class="btn btn-primary btn-sm" onclick="goTo(4)">View Result →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 5 — UPLOAD SUCCESS
+     EPIC-002 | BatchResponseDto | PreprocessingScheduler
+     ════════════════════════════════════════════════ -->
+<div class="screen" id="screen-4">
+  <header class="app-header">
+    <button class="hamburger" onclick="toggleSidebar()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="dm-logo"><div class="dm-logo-mark"><svg width="32" height="32" viewBox="0 0 38 38" fill="none"><rect width="38" height="38" rx="9" fill="#2E75B6"/><polygon points="19,14 24,19 19,24 14,19" fill="#E65100"/><circle cx="19" cy="19" r="3.5" fill="white"/></svg></div><div class="dm-logo-text"><span class="dm-logo-name">Deepmindz</span><span class="dm-logo-sub">Invoice Platform</span></div></div>
+    <div class="header-divider"></div>
+    <span class="header-page-label">Upload Complete</span>
+    <button class="user-pill" style="margin-left:auto"><div class="user-avatar">OP</div><span class="user-name">Operator</span></button>
+  </header>
+  <div class="page-content" style="max-width:720px;margin:0 auto;text-align:center;padding-top:36px">
+    <div class="step-track" style="margin:0 auto 36px">
+      <div class="step-item s-done"><div class="step-dot">✓</div><div class="step-lbl">Select Files</div></div>
+      <div class="step-item s-done"><div class="step-dot">✓</div><div class="step-lbl">Validate</div></div>
+      <div class="step-item s-done"><div class="step-dot">✓</div><div class="step-lbl">Upload</div></div>
+      <div class="step-item s-active"><div class="step-dot">4</div><div class="step-lbl">Confirm</div></div>
+    </div>
+    <div style="width:70px;height:70px;background:var(--green-500);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;box-shadow:0 0 0 14px rgba(46,125,50,.12)">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2 style="font-family:var(--fh);font-size:22px;font-weight:700;color:var(--navy);margin-bottom:8px">Batch Uploaded Successfully!</h2>
+    <p style="color:var(--gray-600);margin-bottom:26px;font-size:13.5px">320 records and images stored securely in S3. Preprocessing pipeline triggered via EventEmitter2.</p>
+    <div class="card" style="text-align:left;margin-bottom:18px">
+      <div class="card-hdr"><h3>Batch Summary</h3></div>
+      <div class="card-body">
+        <div class="form-row" style="gap:14px">
+          <div><div style="font-size:10px;color:var(--gray-400);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Batch ID</div><code>BATCH-2025-0042</code></div>
+          <div><div style="font-size:10px;color:var(--gray-400);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Status</div><span class="badge badge-uploaded">Uploaded</span></div>
+          <div><div style="font-size:10px;color:var(--gray-400);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Total Records</div><strong>320</strong></div>
+          <div><div style="font-size:10px;color:var(--gray-400);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Images Stored</div><strong>320</strong></div>
+          <div><div style="font-size:10px;color:var(--gray-400);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">CSV Path</div><span style="font-size:11.5px;font-family:monospace">batches/0042/data.csv</span></div>
+          <div><div style="font-size:10px;color:var(--gray-400);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Next Stage</div><span class="badge badge-running">Preprocessing</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="alert alert-info" style="text-align:left;margin-bottom:22px">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div>The PreprocessingScheduler runs every 15 minutes (BATCH_CRON_SCHEDULE). You can monitor progress in the <strong>Status Tracker</strong>. Email notifications will be sent on completion or error.</div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-outline" onclick="goTo(2)">Upload Another Batch</button>
+      <button class="btn btn-primary" onclick="goTo(5)">Monitor Status Tracker →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 6 — PREPROCESSING STATUS & AUDIT LOGS
+     EPIC-003 | PreprocessingController | AuditLogService
+     ════════════════════════════════════════════════ -->
+<div class="screen" id="screen-5">
+  <header class="app-header">
+    <button class="hamburger" onclick="toggleSidebar()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="dm-logo"><div class="dm-logo-mark"><svg width="32" height="32" viewBox="0 0 38 38" fill="none"><rect width="38" height="38" rx="9" fill="#2E75B6"/><polygon points="19,14 24,19 19,24 14,19" fill="#E65100"/><circle cx="19" cy="19" r="3.5" fill="white"/></svg></div><div class="dm-logo-text"><span class="dm-logo-name">Deepmindz</span><span class="dm-logo-sub">Invoice Platform</span></div></div>
+    <div class="header-divider"></div>
+    <span class="header-page-label">Preprocessing</span>
+    <button class="user-pill" style="margin-left:auto"><div class="user-avatar">AD</div><span class="user-name">Admin</span></button>
+  </header>
+  <div class="page-hdr">
+    <div class="page-hdr-left">
+      <div class="breadcrumb"><span>Admin</span><span>›</span><span>Preprocessing</span></div>
+      <h1>Preprocessing &amp; Audit Logs</h1>
+      <p class="page-desc">EPIC-003 · PreprocessingService · PreprocessingScheduler · AuditLogService · Cron: */15 * * * *</p>
+    </div>
+    <div class="page-hdr-actions">
+      <button class="btn btn-outline btn-sm">↻ Refresh</button>
+      <button class="btn btn-danger btn-sm">Retry All Failed</button>
+    </div>
+  </div>
+  <div class="summary-strip">
+    <div class="sum-stat"><div class="ss-val">12</div><div class="ss-lbl">Total Batches</div></div>
+    <div class="sum-stat"><div class="ss-val" style="color:var(--orange-600)">1</div><div class="ss-lbl">Running</div></div>
+    <div class="sum-stat"><div class="ss-val" style="color:var(--green-500)">9</div><div class="ss-lbl">Completed</div></div>
+    <div class="sum-stat"><div class="ss-val" style="color:var(--red-500)">2</div><div class="ss-lbl">Failed</div></div>
+    <div class="sum-stat"><div class="ss-val">48s</div><div class="ss-lbl">Avg Duration</div></div>
+  </div>
+  <div class="page-content">
+    <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:20px">
+      <div>
+        <div class="section-hdr"><h3>Batch Preprocessing Status</h3></div>
+        <div class="tbl-wrap">
+          <table class="data-tbl" style="min-width:400px">
+            <thead><tr><th>Batch</th><th>Status</th><th>Records</th><th>Errors</th><th>Duration</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td class="col-mono">0042</td><td><span class="badge badge-running">Running</span></td><td>320</td><td>0</td><td>—</td><td><button class="btn btn-ghost btn-xs">Logs</button></td></tr>
+              <tr><td class="col-mono">0041</td><td><span class="badge badge-done">Done</span></td><td>320</td><td>2</td><td>48s</td><td><button class="btn btn-ghost btn-xs">Logs</button></td></tr>
+              <tr><td class="col-mono">0040</td><td><span class="badge badge-done">Done</span></td><td>185</td><td>0</td><td>31s</td><td><button class="btn btn-ghost btn-xs">Logs</button></td></tr>
+              <tr style="background:var(--red-100)"><td class="col-mono">0039</td><td><span class="badge badge-failed">Failed</span></td><td>410</td><td>18</td><td>12s</td><td><button class="btn btn-danger btn-xs">Retry</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="section-hdr"><h3>Audit Trail — BATCH-0041</h3></div>
+        <div class="card"><div class="card-body" style="padding:12px 14px">
+          <div class="timeline">
+            <div class="tl-row"><div class="tl-side"><div class="tl-node" style="background:var(--green-500)">✓</div><div class="tl-connector"></div></div><div class="tl-body"><div class="tl-title">BATCH_PREPROCESSED</div><div class="tl-meta">SYSTEM · 16 Apr 09:16:44 · 48s total</div><div class="tl-code">{"processed":318,"errors":2,"duration_s":48}</div></div></div>
+            <div class="tl-row"><div class="tl-side"><div class="tl-node" style="background:var(--red-500)">!</div><div class="tl-connector"></div></div><div class="tl-body"><div class="tl-title">RECORD_ERROR — Row 87</div><div class="tl-meta">SYSTEM · 16 Apr 09:16:42</div><div class="tl-code">Image not found: INV_087.jpg</div></div></div>
+            <div class="tl-row"><div class="tl-side"><div class="tl-node" style="background:var(--red-500)">!</div><div class="tl-connector"></div></div><div class="tl-body"><div class="tl-title">RECORD_ERROR — Row 203</div><div class="tl-meta">SYSTEM · 16 Apr 09:16:40</div><div class="tl-code">Invalid mobile format: 0412345</div></div></div>
+            <div class="tl-row"><div class="tl-side"><div class="tl-node" style="background:var(--blue-500)">→</div></div><div class="tl-body"><div class="tl-title">METADATA_EXTRACTED</div><div class="tl-meta">SYSTEM · 16 Apr 09:15:56 · 318 records</div><div class="tl-code">{"VehicleReg":"OK","Mobile":"OK","Date":"OK"}</div></div></div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 7 — PROCESSING STATUS TRACKER LIST
+     EPIC-005 | TrackerController | StatusTrackerPage
+     ════════════════════════════════════════════════ -->
+<div class="screen" id="screen-6">
+  <header class="app-header">
+    <button class="hamburger" onclick="toggleSidebar()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="dm-logo"><div class="dm-logo-mark"><svg width="32" height="32" viewBox="0 0 38 38" fill="none"><rect width="38" height="38" rx="9" fill="#2E75B6"/><polygon points="19,14 24,19 19,24 14,19" fill="#E65100"/><circle cx="19" cy="19" r="3.5" fill="white"/></svg></div><div class="dm-logo-text"><span class="dm-logo-name">Deepmindz</span><span class="dm-logo-sub">Invoice Platform</span></div></div>
+    <div class="header-divider"></div>
+    <span class="header-page-label">Status Tracker</span>
+    <button class="user-pill" style="margin-left:auto"><div class="user-avatar">OP</div><span class="user-name">Operator</span></button>
+  </header>
+  <div class="page-hdr">
+    <div class="page-hdr-left">
+      <div class="breadcrumb"><span class="bc-link" onclick="goTo(1)">Home</span><span>›</span><span>Status Tracker</span></div>
+      <h1>Processing Status Tracker</h1>
+      <p class="page-desc">EPIC-005 · TrackerService.getFileStatuses() · useStatusTracker() hook · Auto-refresh every 30s</p>
+    </div>
+    <div class="page-hdr-actions">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--gray-600);cursor:pointer"><input type="checkbox" checked> Auto-refresh</label>
+      <button class="btn btn-outline btn-sm">Export</button>
+    </div>
+  </div>
+  <div class="summary-strip">
+    <div class="sum-stat"><div class="ss-val">12</div><div class="ss-lbl">Total Batches</div></div>
+    <div class="sum-stat"><div class="ss-val" style="color:var(--green-500)">8</div><div class="ss-lbl">Fully Done</div></div>
+    <div class="sum-stat"><div class="ss-val" style="color:var(--orange-600)">2</div><div class="ss-lbl">In Progress</div></div>
+    <div class="sum-stat"><div class="ss-val" style="color:var(--red-500)">2</div><div class="ss-lbl">Failed</div></div>
+    <div class="sum-stat"><div class="ss-val">84.2%</div><div class="ss-lbl">Avg Confidence</div></div>
+  </div>
+  <div class="page-content" style="padding-top:14px">
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+      <div style="position:relative;flex:1;min-width:180px;max-width:320px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gray-400)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" class="form-ctrl" placeholder="Search batch ID…" style="padding-left:30px;font-size:12.5px">
+      </div>
+      <button class="btn btn-navy btn-xs">All</button>
+      <button class="btn btn-outline btn-xs">Uploaded</button>
+      <button class="btn btn-outline btn-xs">Preprocessing</button>
+      <button class="btn btn-outline btn-xs">EDA</button>
+      <button class="btn btn-outline btn-xs">Done</button>
+      <button class="btn btn-outline btn-xs">Failed</button>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-tbl">
+        <thead><tr><th>Batch ID</th><th>Uploaded</th><th>Records</th><th>Preprocessing</th><th>EDA Status</th><th>Errors</th><th>Avg Confidence</th><th>Turnaround</th><th>Actions</th></tr></thead>
+        <tbody>
+          <tr><td class="col-mono">BATCH-2025-0042</td><td style="font-size:11.5px">16 Apr 09:14</td><td>320</td><td><span class="badge badge-running">Running</span></td><td><span class="badge badge-pending">Pending</span></td><td>0</td><td style="color:var(--gray-400)">—</td><td style="color:var(--gray-400)">—</td><td><button class="btn btn-outline btn-sm">Detail</button></td></tr>
+          <tr><td class="col-mono">BATCH-2025-0041</td><td style="font-size:11.5px">16 Apr 08:52</td><td>320</td><td><span class="badge badge-done">Done</span></td><td><span class="badge badge-running">Running</span></td><td>2</td><td><div class="conf-wrap"><div class="conf-bar"><div class="conf-fill cf-m" style="width:62%"></div></div><span class="cf-num">62%</span></div></td><td>1m 24s</td><td><button class="btn btn-navy btn-sm" onclick="goTo(7)">EDA Results</button></td></tr>
+          <tr><td class="col-mono">BATCH-2025-0040</td><td style="font-size:11.5px">15 Apr 14:32</td><td>185</td><td><span class="badge badge-done">Done</span></td><td><span class="badge badge-done">Done</span></td><td>0</td><td><div class="conf-wrap"><div class="conf-bar"><div class="conf-fill cf-h" style="width:91%"></div></div><span class="cf-num">91%</span></div></td><td>3m 12s</td><td><button class="btn btn-navy btn-sm" onclick="goTo(7)">EDA Results</button></td></tr>
+          <tr style="background:#FFF5F5"><td class="col-mono">BATCH-2025-0039</td><td style="font-size:11.5px">15 Apr 09:08</td><td>410</td><td><span class="badge badge-failed">Failed</span></td><td><span class="badge badge-pending">Pending</span></td><td>18</td><td style="color:var(--gray-400)">—</td><td style="color:var(--gray-400)">—</td><td><button class="btn btn-danger btn-sm">Retry</button></td></tr>
+          <tr><td class="col-mono">BATCH-2025-0038</td><td style="font-size:11.5px">14 Apr 16:55</td><td>290</td><td><span class="badge badge-done">Done</span></td><td><span class="badge badge-done">Done</span></td><td>3</td><td><div class="conf-wrap"><div class="conf-bar"><div class="conf-fill cf-h" style="width:88%"></div></div><span class="cf-num">88%</span></div></td><td>4m 08s</td><td><button class="btn btn-navy btn-sm">EDA Results</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:12px;color:var(--gray-400)">
+      <span>Showing 5 of 12 batches</span>
+      <div class="pagination">
+        <button class="page-btn">‹</button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn">2</button>
+        <button class="page-btn">3</button>
+        <button class="page-btn">›</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 8 — EDA EXTRACTION RESULTS
+     EPIC-004 | EdaController | ExtractionResultEntity
+     ════════════════════════════════════════════════ -->
+<div class="screen" id="screen-7">
+  <header class="app-header">
+    <button class="hamburger" onclick="toggleSidebar()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="dm-logo"><div class="dm-logo-mark"><svg width="32" height="32" viewBox="0 0 38 38" fill="none"><rect width="38" height="38" rx="9" fill="#2E75B6"/><polygon points="19,14 24,19 19,24 14,19" fill="#E65100"/><circle cx="19" cy="19" r="3.5" fill="white"/></svg></div><div class="dm-logo-text"><span class="dm-logo-name">Deepmindz</span><span class="dm-logo-sub">Invoice Platform</span></div></div>
+    <div class="header-divider"></div>
+    <span class="header-page-label">EDA Results</span>
+    <button class="user-pill" style="margin-left:auto"><div class="user-avatar">OP</div><span class="user-name">Operator</span></button>
+  </header>
+  <div class="page-hdr">
+    <div class="page-hdr-left">
+      <div class="breadcrumb"><span class="bc-link" onclick="goTo(1)">Home</span><span>›</span><span class="bc-link" onclick="goTo(6)">Status Tracker</span><span>›</span><span>EDA Results</span></div>
+      <h1>EDA Extraction Results — BATCH-2025-0040</h1>
+      <p class="page-desc">EPIC-004 · EdaService · NanoBananaProvider · 185 records · Model: nano-banana-large · temp=0.0</p>
+    </div>
+    <div class="page-hdr-actions">
+      <span class="tag tag-navy">LLM: nano-banana-large</span>
+      <button class="btn btn-primary">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+        Export CSV
+      </button>
+    </div>
+  </div>
+  <div class="summary-strip">
+    <div class="sum-stat"><div class="ss-val" style="color:var(--green-500)">178</div><div class="ss-lbl">Extracted</div></div>
+    <div class="sum-stat"><div class="ss-val" style="color:var(--orange-600)">5</div><div class="ss-lbl">Partial</div></div>
+    <div class="sum-stat"><div class="ss-val" style="color:var(--red-500)">2</div><div class="ss-lbl">Failed</div></div>
+    <div class="sum-stat"><div class="ss-val" style="color:var(--blue-500)">91.4%</div><div class="ss-lbl">Avg Confidence</div></div>
+  </div>
+  <div class="page-content">
+    <div class="section-hdr"><h3>Record Detail — Row 001 · INV_TY_20250401_001.jpg</h3></div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-hdr">
+        <h3>13 Extracted Fields</h3>
+        <span class="badge badge-extracted">Extracted</span>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--gray-600)">
+          <span style="font-weight:600">Confidence:</span>
+          <div class="conf-wrap" style="width:130px"><div class="conf-bar"><div class="conf-fill cf-h" style="width:91%"></div></div><span class="cf-num" style="font-size:12.5px;font-weight:700;color:var(--green-500)">91%</span></div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="fields-grid">
+          <div class="field-tile"><div class="ft-label">Dealer Name</div><div class="ft-value">Tyremaster Pty Ltd</div><div class="ft-conf fc-h">✓ Rule passed · High confidence</div></div>
+          <div class="field-tile"><div class="ft-label">Customer Name</div><div class="ft-value">James Robertson</div><div class="ft-conf fc-h">✓ Rule passed · High confidence</div></div>
+          <div class="field-tile"><div class="ft-label">Customer Mobile</div><div class="ft-value">+61412345678</div><div class="ft-conf fc-h">✓ E.164 Australian validated</div></div>
+          <div class="field-tile"><div class="ft-label">Vehicle Registration</div><div class="ft-value">ABC123</div><div class="ft-conf fc-h">✓ AU rego pattern [A-Z0-9]{2,8}</div></div>
+          <div class="field-tile"><div class="ft-label">Tyre Size</div><div class="ft-value">205/55R16</div><div class="ft-conf fc-h">✓ NNN/NNRNN format validated</div></div>
+          <div class="field-tile"><div class="ft-label">Tyre Pattern</div><div class="ft-value">Bridgestone Turanza</div><div class="ft-conf fc-m">⚠ Medium confidence — OCR partial</div></div>
+          <div class="field-tile"><div class="ft-label">Amount (excl GST)</div><div class="ft-value">$680.00</div><div class="ft-conf fc-h">✓ Decimal 2dp, non-negative</div></div>
+          <div class="field-tile"><div class="ft-label">GST Amount</div><div class="ft-value">$68.00</div><div class="ft-conf fc-h">✓ = 10% of invoice amount</div></div>
+          <div class="field-tile"><div class="ft-label">GST Components</div><div class="ft-value">{"tyre":68.00}</div><div class="ft-conf fc-h">✓ JSONB object valid</div></div>
+          <div class="field-tile"><div class="ft-label">Quantity</div><div class="ft-value">4</div><div class="ft-conf fc-h">✓ Positive integer</div></div>
+          <div class="field-tile"><div class="ft-label">Invoice Date</div><div class="ft-value">2025-04-01</div><div class="ft-conf fc-h">✓ ISO 8601 YYYY-MM-DD</div></div>
+          <div class="field-tile"><div class="ft-label">Invoice Number</div><div class="ft-value">INV-2025-0874</div><div class="ft-conf fc-h">✓ Alphanumeric</div></div>
+          <div class="field-tile"><div class="ft-label">Comments</div><div class="ft-value ft-null">null — not found in image</div><div class="ft-conf fc-l">— Optional field, not extracted</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="section-hdr"><h3>All 185 Records</h3></div>
+    <div class="tbl-wrap">
+      <table class="data-tbl">
+        <thead><tr><th>Row</th><th>Invoice No</th><th>Customer</th><th>Rego</th><th>Amount</th><th>Date</th><th>Status</th><th>Confidence</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td>001</td><td class="col-mono">INV-2025-0874</td><td>James Robertson</td><td>ABC123</td><td>$680.00</td><td>2025-04-01</td><td><span class="badge badge-extracted">Extracted</span></td><td><div class="conf-wrap"><div class="conf-bar"><div class="conf-fill cf-h" style="width:91%"></div></div><span class="cf-num">91%</span></div></td><td><button class="btn btn-ghost btn-xs">View</button></td></tr>
+          <tr><td>002</td><td class="col-mono">INV-2025-0875</td><td>Sarah Mitchell</td><td>XYZ789</td><td>$920.00</td><td>2025-04-01</td><td><span class="badge badge-extracted">Extracted</span></td><td><div class="conf-wrap"><div class="conf-bar"><div class="conf-fill cf-h" style="width:96%"></div></div><span class="cf-num">96%</span></div></td><td><button class="btn btn-ghost btn-xs">View</button></td></tr>
+          <tr style="background:#FFF9E6"><td>003</td><td class="col-mono">INV-2025-0876</td><td>Tom Nguyen</td><td>DEF456</td><td>$440.00</td><td>2025-04-01</td><td><span class="badge badge-partial">Partial</span></td><td><div class="conf-wrap"><div class="conf-bar"><div class="conf-fill cf-m" style="width:58%"></div></div><span class="cf-num">58%</span></div></td><td><button class="btn btn-ghost btn-xs">View</button></td></tr>
+          <tr style="background:#FFF5F5"><td>004</td><td style="color:var(--gray-400)">—</td><td style="color:var(--gray-400)">—</td><td style="color:var(--gray-400)">—</td><td style="color:var(--gray-400)">—</td><td style="color:var(--gray-400)">—</td><td><span class="badge badge-failed">Failed</span></td><td><div class="conf-wrap"><div class="conf-bar"><div class="conf-fill cf-l" style="width:12%"></div></div><span class="cf-num">12%</span></div></td><td><button class="btn btn-danger btn-xs">Retry</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 9 — OPERATIONS DASHBOARD
+     EPIC-006 | DashboardController | DashboardPage
+     ════════════════════════════════════════════════ -->
+<div class="screen" id="screen-8">
+  <header class="app-header">
+    <button class="hamburger" onclick="toggleSidebar()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="dm-logo"><div class="dm-logo-mark"><svg width="32" height="32" viewBox="0 0 38 38" fill="none"><rect width="38" height="38" rx="9" fill="#2E75B6"/><polygon points="19,14 24,19 19,24 14,19" fill="#E65100"/><circle cx="19" cy="19" r="3.5" fill="white"/></svg></div><div class="dm-logo-text"><span class="dm-logo-name">Deepmindz</span><span class="dm-logo-sub">Invoice Platform</span></div></div>
+    <div class="header-divider"></div>
+    <span class="header-page-label">Operations Dashboard</span>
+    <button class="user-pill" style="margin-left:auto"><div class="user-avatar">AD</div><span class="user-name">Admin</span></button>
+  </header>
+  <div class="page-hdr">
+    <div class="page-hdr-left">
+      <div class="breadcrumb"><span>Admin</span><span>›</span><span>Operations Dashboard</span></div>
+      <h1>Operations Dashboard</h1>
+      <p class="page-desc">EPIC-006 · DashboardService.aggregateMetrics() · Last refreshed: 16 Apr 09:30</p>
+    </div>
+    <div class="page-hdr-actions">
+      <input type="date" class="form-ctrl" value="2025-04-01" style="width:auto;font-size:12px">
+      <span style="font-size:12px;color:var(--gray-400)">to</span>
+      <input type="date" class="form-ctrl" value="2025-04-16" style="width:auto;font-size:12px">
+      <button class="btn btn-primary btn-sm">Apply Filter</button>
+    </div>
+  </div>
+  <div class="metrics-row">
+    <div class="metric-card"><div class="mc-icon mc-icon-blue"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg></div><div class="mc-val">142</div><div class="mc-label">Batches Processed</div><div class="mc-delta up">↑ 12% vs prior period</div></div>
+    <div class="metric-card"><div class="mc-icon mc-icon-green"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div><div class="mc-val">47,840</div><div class="mc-label">Records Extracted</div><div class="mc-delta up">↑ 8%</div></div>
+    <div class="metric-card"><div class="mc-icon mc-icon-red"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="mc-val">234</div><div class="mc-label">Total Errors</div><div class="mc-delta down">↑ 3%</div></div>
+    <div class="metric-card"><div class="mc-icon mc-icon-green"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div class="mc-val">196</div><div class="mc-label">Errors Resolved</div><div class="mc-delta up">83.8% rate</div></div>
+    <div class="metric-card"><div class="mc-icon mc-icon-navy"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="mc-val">48s</div><div class="mc-label">Avg Preprocessing</div><div class="mc-delta up">↓ 5s better</div></div>
+    <div class="metric-card"><div class="mc-icon mc-icon-orange"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="mc-val">3m 42s</div><div class="mc-label">Avg EDA Time</div><div class="mc-delta up">↓ 28s better</div></div>
+    <div class="metric-card"><div class="mc-icon mc-icon-blue"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><div class="mc-val">84.2%</div><div class="mc-label">Avg Confidence</div><div class="mc-delta up">↑ 2.1%</div></div>
+    <div class="metric-card"><div class="mc-icon mc-icon-green"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="mc-val">96.8%</div><div class="mc-label">Extraction Rate</div><div class="mc-delta flat">Target: ≥95% ✓</div></div>
+  </div>
+  <div class="page-content">
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px">
+      <div>
+        <div class="section-hdr"><h3>Daily Volume Trend (Apr 1–16)</h3></div>
+        <div class="card"><div class="card-body">
+          <div class="bar-chart" style="height:110px">
+            <div class="bar bar-blue" style="height:42%"></div><div class="bar bar-orange" style="height:18%"></div>
+            <div class="bar bar-blue" style="height:58%"></div><div class="bar bar-orange" style="height:12%"></div>
+            <div class="bar bar-blue" style="height:72%"></div><div class="bar bar-orange" style="height:20%"></div>
+            <div class="bar bar-blue" style="height:65%"></div><div class="bar bar-orange" style="height:9%"></div>
+            <div class="bar bar-blue" style="height:85%"></div><div class="bar bar-orange" style="height:14%"></div>
+            <div class="bar bar-blue" style="height:78%"></div><div class="bar bar-orange" style="height:22%"></div>
+            <div class="bar bar-blue" style="height:100%"></div><div class="bar bar-orange" style="height:11%"></div>
+          </div>
+          <div class="chart-x"><span>Apr 1</span><span>Apr 4</span><span>Apr 7</span><span>Apr 10</span><span>Apr 13</span><span>Apr 16</span></div>
+          <div class="chart-legend" style="margin-top:10px">
+            <span><div class="legend-dot" style="background:var(--blue-500)"></div>Batches</span>
+            <span><div class="legend-dot" style="background:var(--orange-600)"></div>Errors</span>
+          </div>
+        </div></div>
+      </div>
+      <div>
+        <div class="section-hdr"><h3>Extraction Status Split</h3></div>
+        <div class="card"><div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+          <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>EXTRACTED</span><strong style="color:var(--green-500)">96.8%</strong></div><div class="progress-track"><div class="progress-fill pf-green" style="width:96.8%"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>PARTIAL</span><strong style="color:var(--orange-600)">2.1%</strong></div><div class="progress-track"><div class="progress-fill pf-orange" style="width:2.1%"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>FAILED</span><strong style="color:var(--red-500)">1.1%</strong></div><div class="progress-track"><div class="progress-fill" style="width:1.1%;background:var(--red-500)"></div></div></div>
+          <div class="alert alert-warn" style="margin-top:6px;font-size:11.5px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+            38 unresolved error records
+          </div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 10 — REPORTS & DATA EXPORT
+     EPIC-007 | ReportingController | ReportsPage
+     ════════════════════════════════════════════════ -->
+<div class="screen" id="screen-9">
+  <header class="app-header">
+    <button class="hamburger" onclick="toggleSidebar()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="dm-logo"><div class="dm-logo-mark"><svg width="32" height="32" viewBox="0 0 38 38" fill="none"><rect width="38" height="38" rx="9" fill="#2E75B6"/><polygon points="19,14 24,19 19,24 14,19" fill="#E65100"/><circle cx="19" cy="19" r="3.5" fill="white"/></svg></div><div class="dm-logo-text"><span class="dm-logo-name">Deepmindz</span><span class="dm-logo-sub">Invoice Platform</span></div></div>
+    <div class="header-divider"></div>
+    <span class="header-page-label">Reports &amp; Export</span>
+    <button class="user-pill" style="margin-left:auto"><div class="user-avatar">AD</div><span class="user-name">Admin</span></button>
+  </header>
+  <div class="page-hdr">
+    <div class="page-hdr-left">
+      <div class="breadcrumb"><span>Admin</span><span>›</span><span>Reports &amp; Export</span></div>
+      <h1>Reports &amp; Data Export</h1>
+      <p class="page-desc">EPIC-007 · ReportingController · ReportingService · CsvExporter · ExcelExporter</p>
+    </div>
+  </div>
+  <div class="page-content">
+    <div class="section-hdr"><h3>1. Select Report Type</h3></div>
+    <div class="report-type-grid" style="margin-bottom:24px">
+      <div class="report-type-card rtc-active">
+        <div class="rtc-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+        <div class="rtc-name">Single File Report</div>
+        <div class="rtc-desc">All 13 extracted fields + confidence for one batch · PDF, amounts, dates</div>
+      </div>
+      <div class="report-type-card" onclick="document.querySelectorAll('.report-type-card').forEach(c=>c.classList.remove('rtc-active'));this.classList.add('rtc-active')">
+        <div class="rtc-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div class="rtc-name">Weekly Report</div>
+        <div class="rtc-desc">Aggregated weekly summary — daily breakdowns, totals, averages across all batches</div>
+      </div>
+      <div class="report-type-card" onclick="document.querySelectorAll('.report-type-card').forEach(c=>c.classList.remove('rtc-active'));this.classList.add('rtc-active')">
+        <div class="rtc-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+        <div class="rtc-name">Error Report</div>
+        <div class="rtc-desc">Records where EDA failed or confidence &lt; 30% — for manual review and remediation</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div>
+        <div class="section-hdr"><h3>2. Parameters</h3></div>
+        <div class="card">
+          <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+            <div class="form-group">
+              <label class="form-label">Batch ID <span class="req">*</span></label>
+              <select class="form-ctrl">
+                <option>BATCH-2025-0040 — 185 records</option>
+                <option>BATCH-2025-0041 — 320 records</option>
+                <option>BATCH-2025-0038 — 290 records</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Output Options</label>
+              <label style="display:flex;align-items:center;gap:7px;font-size:12.5px;cursor:pointer"><input type="checkbox" checked> Include per-field confidence values</label>
+              <label style="display:flex;align-items:center;gap:7px;font-size:12.5px;cursor:pointer;margin-top:5px"><input type="checkbox" checked> Include PARTIAL and FAILED records</label>
+              <label style="display:flex;align-items:center;gap:7px;font-size:12.5px;cursor:pointer;margin-top:5px"><input type="checkbox"> Include raw LLM response (debug)</label>
+            </div>
+            <button class="btn btn-navy" style="width:100%;justify-content:center">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="5 12 12 5 19 12"/><polyline points="5 19 12 12 19 19"/></svg>
+              Generate Report
+            </button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="section-hdr"><h3>3. Export</h3></div>
+        <div class="card">
+          <div class="card-hdr"><h3>Report Ready — BATCH-2025-0040</h3><span class="badge badge-done">Ready</span></div>
+          <div class="card-body">
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:8px 14px;font-size:12.5px;margin-bottom:16px;align-items:center">
+              <span style="color:var(--gray-400)">Records:</span><strong>185 rows</strong>
+              <span style="color:var(--gray-400)">Fields:</span><strong>13 + confidence_score</strong>
+              <span style="color:var(--gray-400)">Extracted:</span><strong style="color:var(--green-500)">178</strong>
+              <span style="color:var(--gray-400)">Partial:</span><strong style="color:var(--orange-600)">5</strong>
+              <span style="color:var(--gray-400)">Failed:</span><strong style="color:var(--red-500)">2</strong>
+              <span style="color:var(--gray-400)">Avg Confidence:</span><strong>91.4%</strong>
+              <span style="color:var(--gray-400)">Generated:</span><span>16 Apr 09:32:14</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn btn-primary" style="width:100%;justify-content:center">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+                Download CSV · CsvExporter.export()
+              </button>
+              <button class="btn btn-outline" style="width:100%;justify-content:center">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+                Download Excel (.xlsx) · ExcelExporter
+              </button>
+            </div>
+            <p style="font-size:10.5px;color:var(--gray-400);margin-top:8px;text-align:center">Excel: confidence column colour-coded (green ≥70% · amber 30–69% · red &lt;30%)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     BOTTOM NAVIGATION — FIXED
+     ════════════════════════════════════════════════ -->
+<div class="bottom-nav">
+  <button class="bnav-arrow" id="btnPrev" onclick="prevScreen()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    Previous
+  </button>
+  <div class="bnav-center">
+    <div class="bnav-dots" id="navDots"></div>
+    <div class="bnav-info" id="navInfo"></div>
+  </div>
+  <button class="bnav-arrow" id="btnNext" onclick="nextScreen()">
+    Next
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+</div>
+
+<script>
+/* ── Screen data ── */
+const SCREENS = [
+  {id:'screen-0', title:'Login / Authentication',         epic:'EPIC-001', fe:'LoginPage.tsx',              be:'AuthController → AuthService'},
+  {id:'screen-1', title:'Portal Home Dashboard',           epic:'Cross',    fe:'StatusTrackerPage + hooks',   be:'InvoiceBatchRepository'},
+  {id:'screen-2', title:'Invoice Upload — File Select',    epic:'EPIC-002', fe:'InvoiceUploadPage.tsx',       be:'InvoiceController.uploadBatch()'},
+  {id:'screen-3', title:'Upload — Validation & Progress',  epic:'EPIC-002', fe:'InvoiceUploadPage.tsx',       be:'InvoiceService.createBatch() → FileStorageService'},
+  {id:'screen-4', title:'Upload — Success Confirmation',   epic:'EPIC-002', fe:'InvoiceUploadPage.tsx',       be:'BatchResponseDto · EventEmitter2'},
+  {id:'screen-5', title:'Preprocessing & Audit Logs',      epic:'EPIC-003', fe:'StatusTrackerPage admin view',be:'PreprocessingController · AuditLogService'},
+  {id:'screen-6', title:'Processing Status Tracker List',  epic:'EPIC-005', fe:'StatusTrackerPage.tsx',       be:'TrackerController.getFileStatuses()'},
+  {id:'screen-7', title:'EDA Extraction Results',          epic:'EPIC-004', fe:'DashboardAndReportsPage.tsx', be:'EdaController · ExtractionResultEntity'},
+  {id:'screen-8', title:'Operations Dashboard',            epic:'EPIC-006', fe:'DashboardPage.tsx',           be:'DashboardController · DashboardService'},
+  {id:'screen-9', title:'Reports & Data Export',           epic:'EPIC-007', fe:'ReportsPage.tsx',             be:'ReportingController · CsvExporter · ExcelExporter'},
+];
+
+let cur = 0;
+
+function goTo(n) {
+  if(n < 0 || n >= SCREENS.length) return;
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(SCREENS[n].id).classList.add('active');
+  cur = n;
+  updateNav();
+  window.scrollTo(0,0);
+  closeSidebar();
+}
+function nextScreen(){ if(cur < SCREENS.length-1) goTo(cur+1); }
+function prevScreen(){ if(cur > 0) goTo(cur-1); }
+
+function updateNav() {
+  const sc = SCREENS[cur];
+  document.getElementById('btnPrev').disabled = (cur === 0);
+  document.getElementById('btnNext').disabled = (cur === SCREENS.length-1);
+  document.getElementById('navInfo').innerHTML =
+    `<strong>${sc.title}</strong>${sc.epic} · Screen ${cur+1} of ${SCREENS.length}`;
+  const dots = document.getElementById('navDots');
+  dots.innerHTML = SCREENS.map((_,i) =>
+    `<button class="bnav-dot${i===cur?' active':''}" onclick="goTo(${i})" title="${SCREENS[i].title}"></button>`
+  ).join('');
+}
+
+function setTab(el){
+  el.closest('.login-tabs').querySelectorAll('.login-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+function toggleSidebar(){
+  document.querySelectorAll('[id^=sidebar-]').forEach(sb=>{
+    if(sb.style.display!=='none' || sb.offsetParent !== null){
+      sb.classList.toggle('open');
+    }
+  });
+  document.getElementById('overlay').classList.toggle('active');
+}
+function closeSidebar(){
+  document.querySelectorAll('[id^=sidebar-]').forEach(sb=>sb.classList.remove('open'));
+  document.getElementById('overlay').classList.remove('active');
+}
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT'||e.target.tagName==='TEXTAREA') return;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown') nextScreen();
+  if(e.key==='ArrowLeft' ||e.key==='ArrowUp')   prevScreen();
+});
+updateNav();
+</script>
+</body>
+</html>

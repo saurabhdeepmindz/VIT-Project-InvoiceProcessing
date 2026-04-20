@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { font-family: 'DM Sans', system-ui, sans-serif; }
+  body { @apply bg-ink-50 text-ink-900 antialiased; }
+  h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 rounded-md bg-accent-600 px-4 py-2 font-semibold text-white
+           hover:bg-accent-500 transition focus:outline-none focus:ring-2 focus:ring-accent-300;
+  }
+  .input {
+    @apply w-full rounded-md border border-ink-400/40 bg-white px-3 py-2 text-ink-900
+           focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500;
+  }
+  .card {
+    @apply rounded-lg bg-white shadow-card;
+  }
+}

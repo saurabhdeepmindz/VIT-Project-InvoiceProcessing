@@ -1,0 +1,23 @@
+{
+  "name": "invoice-processing-platform",
+  "version": "3.1.0",
+  "private": true,
+  "description": "Bridgestone Invoice Processing Platform — monorepo root",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "engines": {
+    "node": ">=24.14.0",
+    "npm": ">=10.0.0"
+  },
+  "scripts": {
+    "backend:dev": "npm --workspace backend run start:dev",
+    "backend:build": "npm --workspace backend run build",
+    "backend:migrate": "npm --workspace backend run migrate",
+    "frontend:dev": "npm --workspace frontend run dev",
+    "frontend:build": "npm --workspace frontend run build",
+    "lint": "npm --workspace backend run lint && npm --workspace frontend run lint",
+    "test": "npm --workspace backend run test && npm --workspace frontend run test"
+  }
+}
