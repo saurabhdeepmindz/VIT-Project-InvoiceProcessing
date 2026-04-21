@@ -27,14 +27,14 @@ test.describe('EPIC-001 Authentication · Forgot password', () => {
     await page.getByLabel(/email/i).fill('anybody@example.com');
     await page.getByRole('button', { name: /send reset link/i }).click();
 
-    await expect(page.getByText(/request received|reset link/i)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/request received|reset link/i).first()).toBeVisible({ timeout: 15_000 });
   });
 
   test('US-001.2 / REQ-001.6 unknown email surfaces the same confirmation (enumeration-safe)', async ({ page }) => {
     await page.goto('/forgot-password');
     await page.getByLabel(/email/i).fill('does-not-exist@nowhere.invalid');
     await page.getByRole('button', { name: /send reset link/i }).click();
-    await expect(page.getByText(/request received|reset link/i)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/request received|reset link/i).first()).toBeVisible({ timeout: 15_000 });
   });
 
   test('US-001.2 / REQ-001.8 back-to-login link returns to /login', async ({ page }) => {

@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getTrackerDetail, type FileStatusDetail, type ApiError } from '@/services/tracker.api';
@@ -24,11 +24,12 @@ function badge(status: string | null): string {
 }
 
 interface PageProps {
-  params: { batchId: string };
+  params: Promise<{ batchId: string }>;
 }
 
 export default function TrackerDetailPage({ params }: PageProps) {
-  const { batchId } = params;
+  // Next.js 16: route params are an async Promise in client pages — unwrap with React.use().
+  const { batchId } = use(params);
   const router = useRouter();
   const [detail, setDetail] = useState<FileStatusDetail | null>(null);
   const [err, setErr] = useState<string | null>(null);

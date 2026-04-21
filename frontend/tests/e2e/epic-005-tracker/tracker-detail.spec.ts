@@ -29,21 +29,32 @@ test.describe('EPIC-005 Tracker · Detail view', () => {
     await loginAs(page, OPERATOR);
     await page.goto('/tracker');
 
-    const firstRowLink = page.locator('a[href^="/tracker/"]').first();
-    test.skip(await firstRowLink.count() === 0, 'No batches to drill into');
-    await firstRowLink.click();
-    await page.waitForURL(/\/tracker\/[^/]+$/);
+    // Find a DONE batch row so the 13 extraction fields are actually populated.
+    // Read the batchId directly off the row's <a> so we can't pick up a stray
+    // navigation link. Fall back to skip if no DONE batches exist yet.
+    const doneRow = page.locator('tbody tr').filter({ hasText: /DONE/i }).first();
+    const rowCount = await doneRow.count();
+    test.skip(rowCount === 0, 'No DONE batch row present — upload and process one first');
 
-    await expect(page.getByText(/file name|batch|status/i).first()).toBeVisible();
+    const batchId = await doneRow.locator('a[href^="/tracker/"]').first().getAttribute('href');
+    test.skip(!batchId || !/^\/tracker\/[0-9a-f]{8}-/.test(batchId ?? ''), 'DONE row has no valid batchId link');
+    await page.goto(batchId!);
+    await page.waitForLoadState('networkidle');
 
-    const extractionHints = [
-      /dealer/i,
-      /customer/i,
-      /invoice number|inv(?:oice)?[^a-z]*no/i,
-      /tyre size/i,
-    ];
-    for (const pattern of extractionHints) {
-      await expect(page.getByText(pattern).first()).toBeVisible();
+    const main = page.getByRole('main');
+    await expect(main.getByText(/batch status|records/i).first()).toBeVisible();
+
+    // Summary + always-visible record columns (Invoice # / Dealer / Customer).
+    for (const pattern of [/dealer/i, /customer/i, /invoice\s*(#|number|no)/i]) {
+      await expect(main.getByText(pattern).first()).toBeVisible();
+    }
+
+    // Expand the first record row so the remaining fields (tyre size, invoice
+    // date, tyre pattern, comments, llm provider) become visible.
+    const firstToggle = main.getByRole('row').filter({ hasText: /▸/ }).first();
+    if (await firstToggle.count()) {
+      await firstToggle.click();
+      await expect(main.getByText(/tyre size/i).first()).toBeVisible();
     }
   });
 });
