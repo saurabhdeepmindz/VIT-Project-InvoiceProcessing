@@ -8,6 +8,8 @@ import { useEffect, useState, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getTrackerDetail, type FileStatusDetail, type ApiError } from '@/services/tracker.api';
+import { rerunEda } from '@/services/eda.api';
+import { me, type AuthUser } from '@/services/auth.api';
 
 function classNames(...xs: (string | false | null | undefined)[]): string {
   return xs.filter(Boolean).join(' ');
@@ -34,6 +36,9 @@ export default function TrackerDetailPage({ params }: PageProps) {
   const [detail, setDetail] = useState<FileStatusDetail | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [retrying, setRetrying] = useState(false);
+  const [retryMsg, setRetryMsg] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true); setErr(null);
@@ -52,6 +57,7 @@ export default function TrackerDetailPage({ params }: PageProps) {
     const token = window.localStorage.getItem('invoice.accessToken');
     if (!token) { router.replace('/login'); return; }
     void load();
+    void me().then(setCurrentUser).catch(() => setCurrentUser(null));
   }, [load, router]);
 
   useEffect(() => {
@@ -77,6 +83,20 @@ export default function TrackerDetailPage({ params }: PageProps) {
         URL.revokeObjectURL(url);
       })
       .catch((e: Error) => setErr(e.message));
+  };
+
+  const onRetry = async (): Promise<void> => {
+    setRetrying(true); setRetryMsg(null); setErr(null);
+    try {
+      await rerunEda(batchId);
+      setRetryMsg('Re-run queued. Refreshing status…');
+      await load();
+    } catch (e) {
+      const ae = e as ApiError;
+      setErr(`Retry failed: ${ae.message ?? 'unknown error'}`);
+    } finally {
+      setRetrying(false);
+    }
   };
 
   const onLogout = (): void => {
@@ -124,10 +144,31 @@ export default function TrackerDetailPage({ params }: PageProps) {
                   <h2 className="font-display font-semibold text-lg">{detail.summary.fileName.split('/').pop()}</h2>
                   <p className="text-xs text-ink-600 font-mono break-all">{detail.summary.batchId}</p>
                 </div>
-                {detail.summary.outputCsvPath && (
-                  <button className="btn-primary" onClick={downloadCsv}>Download CSV</button>
-                )}
+                <div className="flex items-center gap-2">
+                  {currentUser?.role === 'ADMIN' && (
+                    (detail.records.some(r => r.edaStatus === 'FAILED')
+                      || ['PARTIAL', 'FAILED'].includes(detail.summary.batchStatus)) && (
+                      <button
+                        className="px-3 py-1.5 rounded-md border border-accent-500 text-accent-600 hover:bg-accent-100 text-sm font-medium disabled:opacity-60"
+                        onClick={onRetry}
+                        disabled={retrying}
+                        title="Re-run EDA on records with eda_status=FAILED or PENDING. Successful extractions are preserved."
+                      >
+                        {retrying ? 'Retrying…' : '↻ Retry failed records'}
+                      </button>
+                    )
+                  )}
+                  {detail.summary.outputCsvPath && (
+                    <button className="btn-primary" onClick={downloadCsv}>Download CSV</button>
+                  )}
+                </div>
               </div>
+
+              {retryMsg && (
+                <div className="mb-3 rounded-md bg-blue-100 text-blue-500 px-3 py-2 text-sm" role="status">
+                  {retryMsg}
+                </div>
+              )}
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
@@ -208,6 +249,15 @@ export default function TrackerDetailPage({ params }: PageProps) {
                             <td className="pr-3"><span className={classNames('text-xs px-2 py-0.5 rounded', badge(r.edaStatus))}>{r.edaStatus}</span></td>
                             <td className="pr-3">{r.confidenceScore != null ? `${r.confidenceScore.toFixed(1)}%` : '—'}</td>
                           </tr>
+                          {!isOpen && r.errorMessage && (
+                            <tr key={`${r.recordId}-err`} className="border-b border-ink-400/10 bg-danger-100/40">
+                              <td />
+                              <td colSpan={9} className="py-2 pr-3 text-xs text-danger-500">
+                                <span className="font-semibold">Error:</span>{' '}
+                                <span title={r.errorMessage}>{r.errorMessage.length > 240 ? `${r.errorMessage.slice(0, 240)}…` : r.errorMessage}</span>
+                              </td>
+                            </tr>
+                          )}
                           {isOpen && (
                             <tr key={`${r.recordId}-x`} className="border-b border-ink-400/10 bg-ink-100/30">
                               <td />
