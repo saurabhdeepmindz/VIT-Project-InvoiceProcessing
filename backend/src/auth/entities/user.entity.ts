@@ -43,6 +43,13 @@ export class UserEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   refresh_token_hash!: string | null;
 
+  /** bcrypt hash of the active password-reset token (cleared on successful reset) */
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  reset_token_hash!: string | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  reset_token_expires_at!: Date | null;
+
   @Column({ type: 'timestamptz', nullable: true })
   last_login_at!: Date | null;
 

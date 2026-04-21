@@ -43,6 +43,19 @@ export interface TrackerRecord {
   confidenceScore: number | null;
   extractionStatus: string | null;
   errorMessage: string | null;
+  dealerName: string | null;
+  customerName: string | null;
+  customerMobile: string | null;
+  vehicleRegistrationNumber: string | null;
+  tyreSize: string | null;
+  tyrePattern: string | null;
+  invoiceAmountExclGst: string | null;
+  gstAmount: string | null;
+  quantity: number | null;
+  invoiceDate: string | null;
+  invoiceNumber: string | null;
+  comments: string | null;
+  llmProviderUsed: string | null;
 }
 
 export interface TrackerAuditEntry {

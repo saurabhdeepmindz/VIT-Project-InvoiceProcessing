@@ -51,9 +51,11 @@ export interface TopErrorBatch {
 
 export interface DashboardFilters { from?: string; to?: string }
 
-function qs(filters: Record<string, string | number | undefined>): string {
+function qs(filters: Readonly<Record<string, string | number | undefined>> | object): string {
   const p = new URLSearchParams();
-  Object.entries(filters).forEach(([k, v]) => { if (v != null && v !== '') p.append(k, String(v)); });
+  Object.entries(filters as Record<string, unknown>).forEach(([k, v]) => {
+    if (v != null && v !== '') p.append(k, String(v));
+  });
   const s = p.toString();
   return s ? `?${s}` : '';
 }

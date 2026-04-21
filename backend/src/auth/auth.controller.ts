@@ -17,6 +17,8 @@ import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { AuthResponseDto, AuthUserDto } from './dto/auth-response.dto';
 import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser, AuthenticatedUser } from '../common/decorators/current-user.decorator';
@@ -61,5 +63,27 @@ export class AuthController {
   @ApiOperation({ summary: 'Return the currently-authenticated user' })
   me(@CurrentUser() user: AuthenticatedUser): AuthUserDto {
     return { id: user.id, email: user.email, role: user.role, full_name: null };
+  }
+
+  @Public()
+  @Post('forgot')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOperation({
+    summary: 'Request a password-reset token. Always 202 — response is identical whether the email exists or not, to prevent enumeration.',
+  })
+  async forgot(@Body() dto: ForgotPasswordDto): Promise<{ message: string }> {
+    await this.auth.requestPasswordReset(dto.email);
+    return {
+      message: 'If that email is registered, a password-reset link has been sent. Demo: check the backend log for the link.',
+    };
+  }
+
+  @Public()
+  @Post('reset')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Consume a reset token and set a new password.' })
+  async reset(@Body() dto: ResetPasswordDto): Promise<{ message: string }> {
+    await this.auth.resetPassword(dto.token, dto.newPassword);
+    return { message: 'Password updated. All active sessions have been revoked — please log in again.' };
   }
 }

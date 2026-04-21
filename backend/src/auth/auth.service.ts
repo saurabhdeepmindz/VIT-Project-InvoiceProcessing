@@ -10,13 +10,14 @@
  */
 
 import {
-  Injectable, UnauthorizedException, OnModuleInit,
+  Injectable, UnauthorizedException, BadRequestException, OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService }    from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository }       from 'typeorm';
 import * as bcrypt          from 'bcrypt';
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import type { SignOptions } from 'jsonwebtoken';
 import { UserEntity }       from './entities/user.entity';
 import { AppLogger }        from '../common/logger/AppLogger';
@@ -94,8 +95,9 @@ export class AuthService implements OnModuleInit {
     const user = await this.users.findOne({ where: { id: userId } });
     if (!user || !user.refresh_token_hash) throw new UnauthorizedException('Invalid refresh token');
 
-    const matches = await bcrypt.compare(presentedToken, user.refresh_token_hash);
-    if (!matches) throw new UnauthorizedException('Invalid refresh token');
+    if (!this.refreshTokenMatches(presentedToken, user.refresh_token_hash)) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
 
     const tokens = await this.issueTokens(user);
     await this.persistRefresh(user.id, tokens.refreshToken);
@@ -104,9 +106,104 @@ export class AuthService implements OnModuleInit {
       user: { id: user.id, email: user.email, role: user.role, full_name: user.full_name } };
   }
 
+  /**
+   * Refresh tokens are already high-entropy (JWT-signed), so bcrypt's iteration
+   * cost adds nothing — and bcrypt is actually UNSAFE here: it truncates input
+   * at 72 bytes, and the first 72 bytes of our JWTs are identical across
+   * refreshes for the same user (algo header + start of payload), so
+   * bcrypt.compare would return true for ANY previous refresh token — silently
+   * bypassing rotation. SHA-256 + timing-safe compare avoids both issues.
+   */
+  private hashRefreshToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
+  }
+
+  private refreshTokenMatches(presented: string, stored: string): boolean {
+    const a = Buffer.from(this.hashRefreshToken(presented), 'hex');
+    const b = Buffer.from(stored, 'hex');
+    if (a.length !== b.length) return false;
+    return timingSafeEqual(a, b);
+  }
+
   async logout(userId: string): Promise<void> {
     await this.users.update(userId, { refresh_token_hash: null });
     this.logger.audit({ actor: userId, action: 'auth.logout', target: { type: 'user', id: userId } });
+  }
+
+  /**
+   * Generate a password-reset token and email it out-of-band.
+   *
+   * For security we always return the same "if the email exists we sent a link"
+   * response — this prevents enumeration attacks. In dev mode (no SMTP wired)
+   * the token is emitted to the backend log, which is how the operator can
+   * complete the flow for the demo.
+   */
+  async requestPasswordReset(email: string): Promise<void> {
+    const user = await this.users.findOne({ where: { email } });
+    if (!user || user.status !== 'ACTIVE') {
+      this.logger.warn('Password-reset requested for unknown/inactive email', { email });
+      return;   // swallow — same response whether email exists or not
+    }
+
+    const saltRounds = Number(this.config.get<string>('BCRYPT_SALT_ROUNDS') ?? 12);
+    const token = randomBytes(32).toString('hex');     // 64-char hex opaque token
+    const tokenHash = await bcrypt.hash(token, saltRounds);
+    const ttlMinutes = Number(this.config.get<string>('PASSWORD_RESET_TTL_MINUTES') ?? 60);
+    const expiresAt = new Date(Date.now() + ttlMinutes * 60_000);
+
+    await this.users.update(user.id, {
+      reset_token_hash: tokenHash,
+      reset_token_expires_at: expiresAt,
+    });
+
+    const resetUrl = `${this.config.get<string>('FRONTEND_URL') ?? 'http://localhost:3000'}/reset-password?token=${token}`;
+
+    // Dev/demo: log the reset URL. Production should send via the configured email provider.
+    this.logger.log('Password reset token issued', {
+      email, resetUrl, expiresAt: expiresAt.toISOString(), ttlMinutes,
+    });
+    this.logger.audit({
+      actor: email, action: 'auth.password_reset.requested',
+      target: { type: 'user', id: user.id },
+      metadata: { ttlMinutes },
+    });
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    if (!token || !newPassword) throw new BadRequestException('token and newPassword are required');
+
+    // We can't look up by hash (bcrypt hashes are non-deterministic). Scan users
+    // with an unexpired reset token and try each. Only seeded + active demo users
+    // are in scope for now; the set is small.
+    const candidates = await this.users
+      .createQueryBuilder('u')
+      .where('u.reset_token_hash IS NOT NULL')
+      .andWhere('u.reset_token_expires_at > :now', { now: new Date() })
+      .getMany();
+
+    let matched: UserEntity | null = null;
+    for (const u of candidates) {
+      if (u.reset_token_hash && await bcrypt.compare(token, u.reset_token_hash)) {
+        matched = u;
+        break;
+      }
+    }
+    if (!matched) throw new BadRequestException('Invalid or expired reset token');
+
+    const saltRounds = Number(this.config.get<string>('BCRYPT_SALT_ROUNDS') ?? 12);
+    const passwordHash = await bcrypt.hash(newPassword, saltRounds);
+
+    await this.users.update(matched.id, {
+      password_hash: passwordHash,
+      reset_token_hash: null,
+      reset_token_expires_at: null,
+      refresh_token_hash: null,        // force re-login everywhere
+    });
+
+    this.logger.audit({
+      actor: matched.email, action: 'auth.password_reset.completed',
+      target: { type: 'user', id: matched.id },
+    });
   }
 
   private async issueTokens(user: UserEntity): Promise<{ accessToken: string; refreshToken: string }> {
@@ -123,8 +220,7 @@ export class AuthService implements OnModuleInit {
   }
 
   private async persistRefresh(userId: string, refreshToken: string): Promise<void> {
-    const saltRounds = Number(this.config.get<string>('BCRYPT_SALT_ROUNDS') ?? 12);
-    const hash = await bcrypt.hash(refreshToken, saltRounds);
-    await this.users.update(userId, { refresh_token_hash: hash });
+    // Deterministic SHA-256 — see refreshTokenMatches for why we don't use bcrypt here.
+    await this.users.update(userId, { refresh_token_hash: this.hashRefreshToken(refreshToken) });
   }
 }

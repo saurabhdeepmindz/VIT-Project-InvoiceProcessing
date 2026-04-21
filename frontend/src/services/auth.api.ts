@@ -43,3 +43,32 @@ export async function logout(): Promise<void> {
 export async function me(): Promise<AuthUser> {
   return apiFetch<AuthUser>('/auth/me');
 }
+
+export interface MessageResponse { message: string }
+
+export function forgotPassword(email: string): Promise<MessageResponse> {
+  return apiFetch<MessageResponse>('/auth/forgot', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function resetPassword(token: string, newPassword: string): Promise<MessageResponse> {
+  return apiFetch<MessageResponse>('/auth/reset', {
+    method: 'POST',
+    body: JSON.stringify({ token, newPassword }),
+  });
+}
+
+const REMEMBERED_EMAIL_KEY = 'invoice.rememberedEmail';
+
+export function getRememberedEmail(): string {
+  if (typeof window === 'undefined') return '';
+  return window.localStorage.getItem(REMEMBERED_EMAIL_KEY) ?? '';
+}
+
+export function setRememberedEmail(email: string | null): void {
+  if (typeof window === 'undefined') return;
+  if (email) window.localStorage.setItem(REMEMBERED_EMAIL_KEY, email);
+  else window.localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+}
