@@ -59,8 +59,10 @@ export class ImageFetchService {
     this.enforceHostAllowlist(url);
 
     let lastErr: unknown = null;
-    const attempts = Math.max(1, this.maxRetries + 1);
-    for (let attempt = 1; attempt <= attempts; attempt++) {
+    const maxAttempts = Math.max(1, this.maxRetries + 1);
+    let attempt = 0;                                   // actual attempts made (for DLQ + error)
+    while (attempt < maxAttempts) {
+      attempt++;
       try {
         const res = await axios.get<ArrayBuffer>(url, {
           responseType: 'arraybuffer',
@@ -75,9 +77,9 @@ export class ImageFetchService {
         lastErr = err;
         const retryable = this.isRetryable(err);
         this.logger.warn('Image fetch attempt failed', {
-          url, attempt, attempts, retryable, error: this.summariseError(err),
+          url, attempt, maxAttempts, retryable, error: this.summariseError(err),
         });
-        if (!retryable || attempt === attempts) break;
+        if (!retryable || attempt === maxAttempts) break;
         await this.sleep(this.backoffMs * Math.pow(2, attempt - 1));
       }
     }
@@ -88,7 +90,8 @@ export class ImageFetchService {
          lastErr.code === 'ERR_FR_MAX_CONTENT_LENGTH_EXCEEDED')) {
       throw new UrlSizeExceededException(url, Number(lastErr.message.match(/\d+/)?.[0] ?? 0), this.maxBytes);
     }
-    throw new UrlFetchException(url, attempts, this.summariseError(lastErr));
+    // attempt = number of attempts ACTUALLY made (1 for non-retryable first failure)
+    throw new UrlFetchException(url, attempt, this.summariseError(lastErr));
   }
 
   private packResult(res: AxiosResponse<ArrayBuffer>, attempts: number): FetchResult {

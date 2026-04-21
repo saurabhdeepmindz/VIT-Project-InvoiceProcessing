@@ -209,6 +209,7 @@ export class PreprocessingService {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       const code = this.extractErrorCode(err);
+      const actualAttempts = this.extractActualAttempts(err);
 
       await recordRepo.update({ id: record.id }, {
         preprocessing_status: RECORD_PP_STATUS.DEAD_LETTERED,
@@ -218,7 +219,7 @@ export class PreprocessingService {
         batch_id: record.batch_id, record_id: record.id,
         failure_stage: code === 'PDF_CONVERSION_ERROR' ? 'PDF_CONVERT' : 'FETCH',
         error_code: code, error_message: message,
-        attempts: this.maxAttempts(),
+        attempts: actualAttempts,
       });
       await this.audit.log(AUDIT_ACTIONS.RECORD_DEAD_LETTERED, {
         batchId: record.batch_id, recordId: record.id,
@@ -244,8 +245,15 @@ export class PreprocessingService {
     return e?.response?.error ?? e?.constructor?.name ?? 'UNKNOWN_ERROR';
   }
 
-  private maxAttempts(): number {
-    return Math.max(1, Number(this.config.get('IMG_DOWNLOAD_RETRY') ?? 3) + 1);
+  /**
+   * Returns the *actual* number of attempts an HttpException carries in its
+   * response body. Falls back to 1 for non-HttpException errors (e.g. unhandled
+   * exceptions where the error was on the very first try with no retry).
+   */
+  private extractActualAttempts(err: unknown): number {
+    const resp = (err as { response?: { attempts?: unknown } } | undefined)?.response;
+    const n = Number(resp?.attempts);
+    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 1;
   }
 
   private async runWithConcurrency<T, R>(
