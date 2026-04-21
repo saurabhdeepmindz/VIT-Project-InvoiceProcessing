@@ -3,9 +3,19 @@
 Vision-LLM invoice ingestion, extraction, tracking, dashboard, and reporting platform built to the LLD at [`docs/InvoiceProcessing_LLD_v3.0.docx`](docs/InvoiceProcessing_LLD_v3.0.docx) + [`docs/InvoiceProcessing_LLD_v3.1_Addendum.docx`](docs/InvoiceProcessing_LLD_v3.1_Addendum.docx).
 
 - **Repo:** <https://github.com/saurabhdeepmindz/bridgestone-invoice-processing> (private)
-- **Stack:** NestJS 11 (TypeScript, Node 24) · Next.js 14 · FastAPI (Python 3.11) · PostgreSQL 18
-- **LLM (pluggable):** Stub (default) · Nano Banana · OpenAI · Anthropic
-- **Tests:** 52 passing (35 backend TS + 17 Python)
+- **Stack:** NestJS 11 (TypeScript, Node 24) · Next.js 16 · React 19 · FastAPI (Python 3.11) · PostgreSQL 18
+- **LLM (pluggable, fully wired):** Stub (default) · Nano Banana · OpenAI · Anthropic
+- **Tests:** **87 passing** — 37 backend Jest · 31 Python pytest · 19 Playwright E2E (RTM-tagged)
+- **Security:** 0 npm audit vulnerabilities (backend + frontend) after Next 14→16 + bcrypt 6 upgrades
+
+## What's new since the initial cut (post-launch hardening)
+
+| Category | Commit | Highlights |
+| --- | --- | --- |
+| Quickest | `90cb491` | Real DLQ `attempts` tracking; bcrypt 5→6 (backend audit → 0 vulns) |
+| Small | `db7e8e9` | `/auth/forgot` + `/auth/reset` flow (pages + enumeration-safe API); login polish (Remember-me, Forgot-password link, password toggle, branded header); **refresh-token SHA-256 fix** (bcrypt-72-byte-truncation security bug) |
+| Medium | `42520aa` | Real LLM providers (NanoBanana httpx, OpenAI SDK, Anthropic SDK) with vision-first base64 image blocks, shared tolerant JSON parser, 14 new unit tests |
+| Larger | `f884d96` | Playwright E2E suite (19 tests, EPIC-organised, full RTM trace); Next.js 14.2 → 16.2 + React 18 → 19 + ESLint 8 → 9 (frontend audit → 0 vulns, clears 5 Next.js CVEs) |
 
 ---
 
@@ -27,7 +37,7 @@ Vision-LLM invoice ingestion, extraction, tracking, dashboard, and reporting pla
 
 ```text
 ┌──────────────────┐        ┌──────────────────────┐        ┌──────────────────┐
-│  Next.js 14      │  REST  │  NestJS 11           │  HTTP  │  FastAPI 3.11    │
+│  Next.js 16      │  REST  │  NestJS 11           │  HTTP  │  FastAPI 3.11    │
 │  (port 3000)     │◄──────►│  (port 3001)         │◄──────►│  (port 8001)     │
 │                  │  JWT   │                      │  JSON  │                  │
 │  /login          │        │  auth / invoice      │        │  /eda/extract    │
@@ -122,11 +132,12 @@ PGPASSWORD=<postgres-password> psql -h localhost -U postgres -d postgres -c \
 PGPASSWORD=<postgres-password> psql -h localhost -U postgres -d invoice_processing -c \
   "GRANT ALL ON SCHEMA public TO invoice_user; ALTER SCHEMA public OWNER TO invoice_user;"
 
-# 3. Apply all 11 migrations in order (run as postgres superuser because
+# 3. Apply all 12 migrations in order (run as postgres superuser because
 #    migration 001 creates the uuid-ossp and pgcrypto extensions)
 cd db/migrations
 for f in 001_*.sql 002_*.sql 003_*.sql 004_*.sql 005_*.sql \
-         006_*.sql 007_*.sql 008_*.sql 009_*.sql 010_*.sql 011_*.sql; do
+         006_*.sql 007_*.sql 008_*.sql 009_*.sql 010_*.sql \
+         011_*.sql 012_*.sql; do
   PGPASSWORD=<postgres-password> psql -h localhost -U postgres -d invoice_processing -f "$f"
 done
 cd ../..
@@ -215,6 +226,7 @@ Five sample CSVs live in `backend/` for you to exercise the pipeline without nee
    - **Single-file** tab: paste a DONE batchId (copy one from /tracker). Choose CSV or Excel. Click Generate. Download from the history table below.
    - **Weekly** tab: pick a date range. Generate. Excel reports have **colour-coded confidence cells** (red / amber / green).
    - **Error** tab: pick a date range + confidence threshold (default 70). Generate. Lists every record that failed or fell below threshold.
+9. **Optional — password reset flow:** log out. Click **Forgot password?** on the login screen. Enter any email and submit. The response is the same regardless of whether the account exists (enumeration-safe). In demo mode the actual reset URL is logged to the backend console — copy the `?token=…` query string into `/reset-password` to set a new password; the refresh token hash is also nulled, forcing re-login on all active sessions.
 
 ---
 
@@ -225,9 +237,11 @@ All endpoints are prefixed `/api/v1` and require a JWT Bearer token (except `/he
 | Method | Path | Who | Purpose |
 | --- | --- | --- | --- |
 | POST | `/auth/login` | public | returns access + refresh tokens |
-| POST | `/auth/refresh` | public | rotate tokens |
+| POST | `/auth/refresh` | public | rotate tokens (SHA-256 + `timingSafeEqual`) |
 | POST | `/auth/logout` | any | revoke refresh token |
 | GET | `/auth/me` | any | current user |
+| POST | `/auth/forgot` | public | request password reset; enumeration-safe 202 response; reset URL logged server-side in demo mode |
+| POST | `/auth/reset` | public | complete password reset with token + new password |
 | POST | `/invoice/batches` | operator / admin | multipart CSV upload |
 | GET | `/invoice/batches` | operator / admin | list own batches |
 | GET | `/invoice/batches/:id` | operator / admin | batch + processing_status |
@@ -270,7 +284,9 @@ Python AI service: <http://localhost:8001/docs> — only `/health`, `/ready`, `/
 │   └── reference-docs/                # sample invoices + URL CSV
 │
 ├── db/
-│   ├── migrations/                    # 11 SQL files — apply in numeric order
+│   ├── migrations/                    # 12 SQL files — apply in numeric order
+│   │                                  #   001-011: schema bootstrap
+│   │                                  #   012: reset_token_hash + TTL for password reset
 │   └── seeds/
 │
 ├── backend/                           # NestJS 11 API
@@ -306,9 +322,11 @@ Python AI service: <http://localhost:8001/docs> — only `/health`, `/ready`, `/
 │       ├── utils/logger.py
 │       ├── providers/
 │       │   ├── base_provider.py         # vision-first contract
+│       │   ├── _shared.py               # VISION_SYSTEM_PROMPT + tolerant JSON parser
 │       │   ├── stub_provider.py         # USE_STUB_PROVIDER=true (default)
-│       │   ├── nano_banana_provider.py
-│       │   ├── anthropic_provider.py
+│       │   ├── nano_banana_provider.py  # real: httpx + /chat/completions + image_url
+│       │   ├── openai_provider.py       # real: official openai SDK + json_object
+│       │   ├── anthropic_provider.py    # real: official anthropic SDK + image block
 │       │   └── provider_factory.py
 │       ├── services/
 │       │   ├── extraction_service.py    # orchestrator
@@ -318,22 +336,37 @@ Python AI service: <http://localhost:8001/docs> — only `/health`, `/ready`, `/
 │       │   ├── ocr_service.py           # optional Tesseract
 │       │   └── pdf_service.py           # pypdfium2
 │       ├── routers/eda_router.py        # POST /eda/extract
-│       └── tests/                       # pytest (17 tests)
+│       └── tests/                       # pytest (31 tests — incl. 14 provider tests)
 │
-└── frontend/                            # Next.js 14 (App Router)
+└── frontend/                            # Next.js 16 (App Router) + React 19
     ├── package.json  next.config.mjs  tsconfig.json  tailwind.config.ts
-    └── src/
-        ├── app/
-        │   ├── layout.tsx  page.tsx  globals.css
-        │   ├── login/page.tsx             # EPIC-001
-        │   ├── upload/page.tsx            # EPIC-002  (CSV dropzone + live polling)
-        │   ├── tracker/page.tsx           # EPIC-005  list
-        │   ├── tracker/[batchId]/page.tsx # EPIC-005  detail — expandable 13-field rows
-        │   ├── dashboard/page.tsx         # EPIC-006  metrics + trend chart
-        │   └── reports/page.tsx           # EPIC-007  3 tabs + history
-        ├── components/ui/TrendChart.tsx   # zero-dep inline-SVG chart
-        ├── lib/api.ts                     # fetch wrapper with JWT injection
-        └── services/{auth,invoice,tracker,dashboard,reporting}.api.ts
+    ├── playwright.config.ts             # E2E suite entry
+    ├── src/
+    │   ├── app/
+    │   │   ├── layout.tsx  page.tsx  globals.css
+    │   │   ├── login/page.tsx             # EPIC-001  (polished: Remember-me, toggle, branded)
+    │   │   ├── forgot-password/page.tsx   # EPIC-001  password reset request
+    │   │   ├── reset-password/page.tsx    # EPIC-001  token + new password
+    │   │   ├── upload/page.tsx            # EPIC-002  (CSV dropzone + live polling)
+    │   │   ├── tracker/page.tsx           # EPIC-005  list
+    │   │   ├── tracker/[batchId]/page.tsx # EPIC-005  detail — expandable 13-field rows
+    │   │   ├── dashboard/page.tsx         # EPIC-006  metrics + trend chart
+    │   │   └── reports/page.tsx           # EPIC-007  3 tabs + history
+    │   ├── components/ui/TrendChart.tsx   # zero-dep inline-SVG chart
+    │   ├── lib/api.ts                     # fetch wrapper with JWT injection
+    │   └── services/{auth,invoice,tracker,dashboard,reporting}.api.ts
+    └── tests/e2e/                         # Playwright E2E (19 tests, RTM-tagged)
+        ├── RTM.md                         # consolidated traceability matrix
+        ├── README.md                      # run & env-override guide
+        ├── fixtures/                      # accounts + login helper + sample CSV
+        ├── epic-001-auth/                 # login, forgot-password, rbac
+        ├── epic-002-upload/               # csv upload
+        ├── epic-005-tracker/              # list + detail
+        ├── epic-006-dashboard/            # metrics + trend + top-errors
+        ├── epic-007-reports/              # tabs + history
+        └── test-output/                   # runtime artefacts (git-ignored)
+            ├── results/                   # per-test traces, screenshots, videos
+            └── report/                    # html + junit.xml + results.json
 ```
 
 ---
@@ -356,14 +389,24 @@ All defaults live in [`.env.sample`](.env.sample). The ones most likely to chang
 | `LOCAL_STORAGE_PATH` | Where downloaded images / reports / output CSVs are saved | `D:/invoice-processing-data/storage` |
 | `METRICS_ENABLED` / `SWAGGER_ENABLED` | Turn on/off | `true` / `true` |
 | `OCR_PROVIDER` | `tesseract` \| `azure_cv` \| `none` — OCR is **optional** corroboration signal | `tesseract` |
+| `PASSWORD_RESET_TTL_MINUTES` | Lifetime of a `/auth/forgot` reset token | `60` |
 
 ### Switching to a real LLM
 
+All three real providers (Nano Banana, OpenAI, Anthropic) are now fully wired — vision-first, JSON-coerced, with a tolerant response parser that strips Markdown fences, leading prose, and trailing commas. Pick one and set its key:
+
 ```env
 USE_STUB_PROVIDER=false
-LLM_PROVIDER=openai
+LLM_PROVIDER=openai                         # openai | anthropic | nano_banana
 OPENAI_API_KEY=sk-...
 OPENAI_MODEL=gpt-4o
+```
+
+```env
+USE_STUB_PROVIDER=false
+LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_MODEL=claude-sonnet-4-6
 ```
 
 Restart the Python service. Verify:
@@ -373,29 +416,57 @@ GET http://localhost:8001/eda/provider
 →  {"provider":"openai","use_stub":false}
 ```
 
+All providers share the same `VISION_SYSTEM_PROMPT` in `python/app/providers/_shared.py`, so extraction output is consistent regardless of which one is active.
+
 ---
 
 ## 9. Tests
 
 ```bash
-# Backend (Jest, 35 tests)
+# Backend (Jest, 37 tests)
 npm --workspace backend run test
 
-# Python (pytest, 17 tests)
+# Python (pytest, 31 tests)
 cd python
 .\.venv\Scripts\Activate.ps1
 pytest tests/ -v
 deactivate
 cd ..
+
+# Frontend E2E (Playwright, 19 tests — RTM-tagged per EPIC)
+cd frontend
+npm run e2e:install          # one-time: download Chromium
+npm run e2e                  # headless full run
+npm run e2e:auth             # scope to a single EPIC
+npm run e2e:report           # open the HTML report
+cd ..
 ```
 
-Coverage (≥80% on logic-bearing files):
+**Suite breakdown (87 tests total):**
 
 | Suite | Tests | Where |
 | --- | --- | --- |
 | InvoiceValidator / InvoiceTransformer / InvoiceService | 26 | `backend/src/invoice/*.spec.ts` |
 | ImageFetchService / PdfInspectService | 9 | `backend/src/preprocessing/service/*.spec.ts` |
+| AuthService (refresh-rotation + SHA-256 hash + logout path) | 2 | `backend/src/auth/auth.service.spec.ts` |
 | RuleEngine / ConfidenceScorer / MultiPageMerger | 17 | `python/tests/test_*.py` |
+| LLM providers (Nano Banana + OpenAI + Anthropic + shared JSON parser) | 14 | `python/tests/test_llm_providers.py` |
+| EPIC-001 Auth E2E (login, forgot, rbac) | 9 | `frontend/tests/e2e/epic-001-auth/` |
+| EPIC-002 Upload E2E | 2 | `frontend/tests/e2e/epic-002-upload/` |
+| EPIC-005 Tracker E2E (list + detail) | 3 | `frontend/tests/e2e/epic-005-tracker/` |
+| EPIC-006 Dashboard E2E | 3 | `frontend/tests/e2e/epic-006-dashboard/` |
+| EPIC-007 Reports E2E | 2 | `frontend/tests/e2e/epic-007-reports/` |
+
+**RTM traceability:** every Playwright spec header carries an `EPIC / User Story / Requirements / Acceptance / RTM Trace` block pointing at the backend controller + service and the frontend page + API-client it exercises. The consolidated matrix lives in [`frontend/tests/e2e/RTM.md`](frontend/tests/e2e/RTM.md).
+
+**E2E artefacts** (git-ignored; populated at run time):
+
+| Path | Purpose |
+| --- | --- |
+| `frontend/tests/e2e/test-output/results/` | Per-test traces, screenshots, videos — `npx playwright show-trace <path>/trace.zip` |
+| `frontend/tests/e2e/test-output/report/html/` | Browsable Playwright HTML report |
+| `frontend/tests/e2e/test-output/report/junit.xml` | JUnit XML for CI ingestion |
+| `frontend/tests/e2e/test-output/report/results.json` | Machine-readable results for dashboarding / RTM tooling |
 
 ---
 
@@ -427,11 +498,16 @@ git push
 
 ---
 
-## 12. Deferred / known follow-ups
+## 12. Post-launch hardening — status
 
-1. **Login-page UI polish** — shipped minimal; revisit before the customer demo.
-2. **Real-LLM wire-up** — Nano Banana / OpenAI / Anthropic provider stubs exist; vision-API HTTP calls to be fleshed out when keys are available.
-3. **npm audit** — 6 high-sev transitive advisories from Phase 0 install. Run `npm audit fix` before any production push.
-4. **DLQ cosmetic** — `attempts: 4` is logged even for non-retryable 4xx failures where only 1 attempt was made; should record the real attempt count.
-5. **E2E Playwright** — not written. Manual smoke walkthroughs (§5) cover the critical paths for now.
-6. **Auth EPIC-001** is deliberately "basic minimum" — no password reset, no "forgot password" UI, no refresh-rotation E2E test.
+| # | Item | Status | Notes |
+| --- | --- | --- | --- |
+| 1 | Login-page UI polish | ✅ Done (`db7e8e9`) | Branded header, Remember-me, Forgot-password link, Show/Hide password, disabled-during-submit, improved error UI with `role="alert"` |
+| 2 | Real-LLM wire-up (Nano Banana / OpenAI / Anthropic) | ✅ Done (`42520aa`) | Vision-first; shared tolerant JSON parser; 14 new unit tests; see §8 *Switching to a real LLM* |
+| 3 | npm audit — backend | ✅ Done (`90cb491`) | `bcrypt 5 → 6` dropped transitive `tar` / `node-pre-gyp` advisories → **0 vulnerabilities** |
+| 4 | npm audit — frontend | ✅ Done (`f884d96`) | `next 14 → 16` + `react 18 → 19` + `eslint 8 → 9` → **0 vulnerabilities** (cleared GHSA-9g9p-9gw9-jx7f / GHSA-h25m-26qc-wcjf / GHSA-ggv3-7p47-pfv8 / GHSA-3x4c-7xq6-9pq8 / GHSA-q4gf-8mx6-v5v3) |
+| 5 | DLQ cosmetic — real `attempts` count | ✅ Done (`90cb491`) | `ImageFetchService` tracks `actualAttempts`; `PreprocessingService` extracts real count from caught exception |
+| 6 | E2E Playwright suite | ✅ Done (`f884d96`) | 19 tests, EPIC-organised (`tests/e2e/epic-00N-*/`), full RTM trace in every spec header + consolidated [`RTM.md`](frontend/tests/e2e/RTM.md) |
+| 7 | Auth EPIC-001 extras | ✅ Done (`db7e8e9`) | Password reset flow (`/auth/forgot` + `/auth/reset` + `/forgot-password` + `/reset-password` pages); refresh-rotation unit test; **security fix:** refresh-token hashing replaced with SHA-256 + `timingSafeEqual` (bcrypt truncates at 72 bytes, which silently broke refresh-token rotation since JWTs for the same user share a long common prefix) |
+
+Remaining deliberate deferrals: none blocking demo.
