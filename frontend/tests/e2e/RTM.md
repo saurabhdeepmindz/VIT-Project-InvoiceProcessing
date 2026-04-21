@@ -5,16 +5,38 @@ story it verifies, the requirement IDs it exercises, and the backend +
 frontend surfaces it traces to. The `EPIC-XXX-…` folders on disk mirror the
 EPIC numbering in `README.md` and the LLD document.
 
-| EPIC        | User Story | Requirement(s)                  | Spec                                                        | Surfaces Traced                                                                                                 |
-| ----------- | ---------- | ------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| EPIC-001    | US-001.1   | REQ-001.1, REQ-001.2, REQ-001.4 | `epic-001-auth/login.spec.ts`                               | `auth.controller#login`, `auth.service#login`, `app/login/page.tsx`, `services/auth.api.ts#login`               |
-| EPIC-001    | US-001.2   | REQ-001.5–REQ-001.8             | `epic-001-auth/forgot-password.spec.ts`                     | `auth.controller#requestReset`, `auth.service#requestPasswordReset`, `app/forgot-password/page.tsx`             |
-| EPIC-001    | US-001.3   | REQ-001.9, REQ-001.10, REQ-001.11 | `epic-001-auth/rbac.spec.ts`                              | `JwtAuthGuard`, `RolesGuard`, client-side route guards                                                           |
-| EPIC-002    | US-002.1   | REQ-002.1–REQ-002.4             | `epic-002-upload/csv-upload.spec.ts`                        | `invoice.controller#uploadBatch`, `invoice.service#createBatch`, `app/upload/page.tsx`                           |
-| EPIC-005    | US-005.1   | REQ-005.1–REQ-005.4             | `epic-005-tracker/tracker-list.spec.ts`                     | `tracker.controller#list`, `tracker.service#listFiles`, `app/tracker/page.tsx`                                   |
-| EPIC-005    | US-005.2   | REQ-005.5–REQ-005.8             | `epic-005-tracker/tracker-detail.spec.ts`                   | `tracker.controller#detail`, `tracker.service#getDetail`, `app/tracker/[batchId]/page.tsx`                       |
-| EPIC-006    | US-006.1   | REQ-006.1–REQ-006.4             | `epic-006-dashboard/dashboard.spec.ts`                      | `dashboard.controller`, `dashboard.service`, `app/dashboard/page.tsx`                                            |
-| EPIC-007    | US-007.1   | REQ-007.1, REQ-007.3            | `epic-007-reports/reports.spec.ts`                          | `reporting.controller`, `reporting.service`, `app/reports/page.tsx`                                              |
+> ` * ` next to EPIC-003 / EPIC-004 indicates a *lifecycle / observation*
+> spec: those EPICs are headless server-side pipelines with no dedicated UI
+> surface, so the E2E test asserts their outcomes through the downstream
+> tracker. Functional coverage lives in backend Jest and Python pytest.
+
+## Coverage overview
+
+| EPIC       | User Story | Requirement(s)                    | Spec                                                |
+| ---------- | ---------- | --------------------------------- | --------------------------------------------------- |
+| EPIC-001   | US-001.1   | REQ-001.1, REQ-001.2, REQ-001.4   | `epic-001-auth/login.spec.ts`                       |
+| EPIC-001   | US-001.2   | REQ-001.5–REQ-001.8               | `epic-001-auth/forgot-password.spec.ts`             |
+| EPIC-001   | US-001.3   | REQ-001.9, REQ-001.10, REQ-001.11 | `epic-001-auth/rbac.spec.ts`                        |
+| EPIC-002   | US-002.1   | REQ-002.1–REQ-002.4               | `epic-002-upload/csv-upload.spec.ts`                |
+| EPIC-003 * | US-003.1   | REQ-003.1–REQ-003.4               | `epic-003-preprocessing/pipeline-lifecycle.spec.ts` |
+| EPIC-004 * | US-004.1   | REQ-004.1–REQ-004.4               | `epic-004-eda/extraction-fields.spec.ts`            |
+| EPIC-005   | US-005.1   | REQ-005.1–REQ-005.4               | `epic-005-tracker/tracker-list.spec.ts`             |
+| EPIC-005   | US-005.2   | REQ-005.5–REQ-005.8               | `epic-005-tracker/tracker-detail.spec.ts`           |
+| EPIC-006   | US-006.1   | REQ-006.1–REQ-006.4               | `epic-006-dashboard/dashboard.spec.ts`              |
+| EPIC-007   | US-007.1   | REQ-007.1, REQ-007.3              | `epic-007-reports/reports.spec.ts`                  |
+
+## Surfaces traced (backend + frontend symbols per spec)
+
+* **`epic-001-auth/login.spec.ts`** — `auth.controller#login`, `auth.service#login`, `app/login/page.tsx`, `services/auth.api.ts#login`
+* **`epic-001-auth/forgot-password.spec.ts`** — `auth.controller#requestReset`, `auth.service#requestPasswordReset`, `app/forgot-password/page.tsx`
+* **`epic-001-auth/rbac.spec.ts`** — `JwtAuthGuard`, `RolesGuard`, client-side route guards
+* **`epic-002-upload/csv-upload.spec.ts`** — `invoice.controller#uploadBatch`, `invoice.service#createBatch`, `app/upload/page.tsx`
+* **`epic-003-preprocessing/pipeline-lifecycle.spec.ts`** — `preprocessing.scheduler`, `preprocessing.service`, `image-fetch.service`, `pdf-inspect.service`, `dlq.service`
+* **`epic-004-eda/extraction-fields.spec.ts`** — `extraction_service.py`, LLM providers (stub / nano_banana / openai / anthropic), `eda.service.ts`, `csv-output.service.ts`, `app/tracker/[batchId]/page.tsx`
+* **`epic-005-tracker/tracker-list.spec.ts`** — `tracker.controller#list`, `tracker.service#listFiles`, `app/tracker/page.tsx`
+* **`epic-005-tracker/tracker-detail.spec.ts`** — `tracker.controller#detail`, `tracker.service#getDetail`, `app/tracker/[batchId]/page.tsx`
+* **`epic-006-dashboard/dashboard.spec.ts`** — `dashboard.controller`, `dashboard.service`, `app/dashboard/page.tsx`
+* **`epic-007-reports/reports.spec.ts`** — `reporting.controller`, `reporting.service`, `app/reports/page.tsx`
 
 ## Requirement catalogue (short form)
 
@@ -42,6 +64,24 @@ EPIC numbering in `README.md` and the LLD document.
 | REQ-002.2   | A valid CSV upload creates a new batch row (status = UPLOADED).                               |
 | REQ-002.3   | Upload UI displays the success state with the new batch ID.                                   |
 | REQ-002.4   | Recent-batches table includes the newly uploaded batch on refresh.                            |
+
+### EPIC-003 — Preprocessing Pipeline *(observation spec)*
+
+| ID          | Requirement                                                                                   |
+| ----------- | --------------------------------------------------------------------------------------------- |
+| REQ-003.1   | Preprocessing runs asynchronously after upload.                                               |
+| REQ-003.2   | Tracker exposes a `preprocessingStatus` badge per batch.                                      |
+| REQ-003.3   | `batchStatus` transitions UPLOADED → PREPROCESSING → EDA_PROCESSING → DONE/PARTIAL/FAILED.    |
+| REQ-003.4   | Permanently-failing records land in the DLQ and are visible in tracker detail.                |
+
+### EPIC-004 — Automated Invoice Data Extraction *(observation spec)*
+
+| ID          | Requirement                                                                                   |
+| ----------- | --------------------------------------------------------------------------------------------- |
+| REQ-004.1   | Tracker detail exposes the 13 canonical fields per LLD §3.2 plus `llm_provider_used`.         |
+| REQ-004.2   | Tracker surfaces an `edaStatus` badge per batch (EXTRACTED / PARTIAL / FAILED).               |
+| REQ-004.3   | Batches with any successful extraction expose a numeric `avgConfidence` (0–100).              |
+| REQ-004.4   | DONE batches expose a downloadable output CSV link.                                           |
 
 ### EPIC-005 — Processing Status Tracker
 

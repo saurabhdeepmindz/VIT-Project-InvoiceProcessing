@@ -5,7 +5,7 @@ Vision-LLM invoice ingestion, extraction, tracking, dashboard, and reporting pla
 - **Repo:** <https://github.com/saurabhdeepmindz/bridgestone-invoice-processing> (private)
 - **Stack:** NestJS 11 (TypeScript, Node 24) · Next.js 16 · React 19 · FastAPI (Python 3.11) · PostgreSQL 18
 - **LLM (pluggable, fully wired):** Stub (default) · Nano Banana · OpenAI · Anthropic
-- **Tests:** **87 passing** — 37 backend Jest · 31 Python pytest · 19 Playwright E2E (RTM-tagged)
+- **Tests:** **93 passing** — 37 backend Jest · 31 Python pytest · 25 Playwright E2E (RTM-tagged, EPIC-001..007)
 - **Security:** 0 npm audit vulnerabilities (backend + frontend) after Next 14→16 + bcrypt 6 upgrades
 
 ## What's new since the initial cut (post-launch hardening)
@@ -355,12 +355,14 @@ Python AI service: <http://localhost:8001/docs> — only `/health`, `/ready`, `/
     │   ├── components/ui/TrendChart.tsx   # zero-dep inline-SVG chart
     │   ├── lib/api.ts                     # fetch wrapper with JWT injection
     │   └── services/{auth,invoice,tracker,dashboard,reporting}.api.ts
-    └── tests/e2e/                         # Playwright E2E (19 tests, RTM-tagged)
+    └── tests/e2e/                         # Playwright E2E (25 tests, RTM-tagged)
         ├── RTM.md                         # consolidated traceability matrix
         ├── README.md                      # run & env-override guide
         ├── fixtures/                      # accounts + login helper + sample CSV
         ├── epic-001-auth/                 # login, forgot-password, rbac
         ├── epic-002-upload/               # csv upload
+        ├── epic-003-preprocessing/        # pipeline-lifecycle (observation)
+        ├── epic-004-eda/                  # extraction-fields (observation)
         ├── epic-005-tracker/              # list + detail
         ├── epic-006-dashboard/            # metrics + trend + top-errors
         ├── epic-007-reports/              # tabs + history
@@ -433,7 +435,7 @@ pytest tests/ -v
 deactivate
 cd ..
 
-# Frontend E2E (Playwright, 19 tests — RTM-tagged per EPIC)
+# Frontend E2E (Playwright, 25 tests — RTM-tagged per EPIC, all 7 EPICs covered)
 cd frontend
 npm run e2e:install          # one-time: download Chromium
 npm run e2e                  # headless full run
@@ -442,7 +444,7 @@ npm run e2e:report           # open the HTML report
 cd ..
 ```
 
-**Suite breakdown (87 tests total):**
+**Suite breakdown (93 tests total):**
 
 | Suite | Tests | Where |
 | --- | --- | --- |
@@ -453,6 +455,8 @@ cd ..
 | LLM providers (Nano Banana + OpenAI + Anthropic + shared JSON parser) | 14 | `python/tests/test_llm_providers.py` |
 | EPIC-001 Auth E2E (login, forgot, rbac) | 9 | `frontend/tests/e2e/epic-001-auth/` |
 | EPIC-002 Upload E2E | 2 | `frontend/tests/e2e/epic-002-upload/` |
+| EPIC-003 Preprocessing lifecycle (observation) | 3 | `frontend/tests/e2e/epic-003-preprocessing/` |
+| EPIC-004 EDA extraction-fields (observation) | 3 | `frontend/tests/e2e/epic-004-eda/` |
 | EPIC-005 Tracker E2E (list + detail) | 3 | `frontend/tests/e2e/epic-005-tracker/` |
 | EPIC-006 Dashboard E2E | 3 | `frontend/tests/e2e/epic-006-dashboard/` |
 | EPIC-007 Reports E2E | 2 | `frontend/tests/e2e/epic-007-reports/` |

@@ -7,7 +7,7 @@ index lives in [`RTM.md`](./RTM.md).
 
 ## Layout
 
-```
+```text
 tests/e2e/
 ├── RTM.md                             # consolidated traceability matrix
 ├── fixtures/
@@ -20,6 +20,10 @@ tests/e2e/
 │   └── rbac.spec.ts                   # US-001.3
 ├── epic-002-upload/
 │   └── csv-upload.spec.ts             # US-002.1
+├── epic-003-preprocessing/            # *observation spec
+│   └── pipeline-lifecycle.spec.ts     # US-003.1
+├── epic-004-eda/                      # *observation spec
+│   └── extraction-fields.spec.ts      # US-004.1
 ├── epic-005-tracker/
 │   ├── tracker-list.spec.ts           # US-005.1
 │   └── tracker-detail.spec.ts         # US-005.2

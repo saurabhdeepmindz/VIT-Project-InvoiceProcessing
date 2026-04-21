@@ -15,6 +15,8 @@
     "e2e:ui": "playwright test --ui",
     "e2e:auth": "playwright test epic-001-auth",
     "e2e:upload": "playwright test epic-002-upload",
+    "e2e:preprocessing": "playwright test epic-003-preprocessing",
+    "e2e:eda": "playwright test epic-004-eda",
     "e2e:tracker": "playwright test epic-005-tracker",
     "e2e:dashboard": "playwright test epic-006-dashboard",
     "e2e:reports": "playwright test epic-007-reports",
