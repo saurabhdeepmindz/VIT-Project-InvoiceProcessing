@@ -1,107 +1,141 @@
 """
-@file   anthropic_provider.py
-@module providers
-@description
-    Anthropic Claude LLM provider — swap-in implementation.
-    Activate by setting LLM_PROVIDER=anthropic in .env.
-    Zero code changes required; only .env update needed.
+anthropic_provider.py  (v3.1)
 
-EPIC: EPIC-004 — Automated Invoice Data Extraction (EDA)
-User Story: Modular LLM provider pattern — Anthropic Claude swap-in.
-Acceptance: "LLM can be changed without code changes — only .env update"
+Anthropic Claude vision-first provider. Uses the official `anthropic` async
+client: messages.create with a multi-part user content list — text prompt +
+image block (base64 source) — and a system prompt that forces JSON-only
+output.
 
-@author  Invoice Processing Platform Engineering
-@version 1.0.0
-@since   2025-01-01
+Activate: LLM_PROVIDER=anthropic  (USE_STUB_PROVIDER=false)
+Config:   ANTHROPIC_API_KEY, ANTHROPIC_MODEL, ANTHROPIC_MAX_TOKENS
+
+@since 3.1.0
 """
 
-import json
-import anthropic
-from tenacity import retry, stop_after_attempt, wait_exponential
+from __future__ import annotations
 
-from .base_provider         import ILlmProvider
-from .nano_banana_provider  import SYSTEM_PROMPT  # reuse same prompt
-from ..exceptions.llm_exception import LlmProviderException
-from ..config.settings      import Settings
-from ..utils.logger         import get_logger
+import base64
+from typing import Any
+
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+
+from ..config.settings import Settings
+from ..exceptions.exceptions import LlmProviderException
+from ..utils.logger import get_logger
+from ._shared import (
+    IMAGE_USER_PROMPT,
+    TEXT_USER_PROMPT_TEMPLATE,
+    VISION_SYSTEM_PROMPT,
+    parse_json_response,
+)
+from .base_provider import ILlmProvider
+
 
 logger = get_logger(__name__)
 
+_PROVIDER_NAME = "anthropic"
+
+_SUPPORTED_IMAGE_MIME = {"image/jpeg", "image/png", "image/gif", "image/webp"}
+
 
 class AnthropicProvider(ILlmProvider):
-    """
-    Anthropic Claude LLM provider for invoice field extraction.
+    """Anthropic Claude messages-API client, vision-enabled via base64 image block."""
 
-    EPIC: EPIC-004 — Modular LLM Provider (Anthropic Swap-in)
-    Activate: LLM_PROVIDER=anthropic in .env
-    Configure: ANTHROPIC_API_KEY, ANTHROPIC_MODEL
+    def __init__(self, settings: Settings) -> None:
+        import anthropic  # noqa: WPS433 — lazy so missing SDK doesn't crash factory.
 
-    Uses the Anthropic Messages API with the same extraction prompt as
-    NanoBananaProvider — ensures consistent field extraction regardless of provider.
-
-    Usage:
-        provider = AnthropicProvider(settings)
-        fields   = await provider.extract_fields(ocr_text)
-    """
-
-    def __init__(self, settings: Settings):
-        """
-        Initialises Anthropic provider with API credentials.
-
-        EPIC: EPIC-004 | Anthropic Provider Initialisation
-        @param settings: Application settings (ANTHROPIC_API_KEY, ANTHROPIC_MODEL).
-        @raises ValueError: When ANTHROPIC_API_KEY is not configured.
-        """
-        # TODO: self.api_key = settings.ANTHROPIC_API_KEY
-        # TODO: self.model   = settings.ANTHROPIC_MODEL
-        # TODO: self.client  = anthropic.AsyncAnthropic(api_key=self.api_key)
-        # TODO: self.validate_config()
-        pass
+        self.api_key = settings.ANTHROPIC_API_KEY
+        self.model = settings.ANTHROPIC_MODEL
+        self.max_tokens = settings.ANTHROPIC_MAX_TOKENS
+        self.validate_config()
+        self._client = anthropic.AsyncAnthropic(api_key=self.api_key)
 
     def get_provider_name(self) -> str:
-        """
-        @return: 'anthropic'
-        """
-        return 'anthropic'
+        return _PROVIDER_NAME
 
     def validate_config(self) -> bool:
-        """
-        Validates ANTHROPIC_API_KEY and ANTHROPIC_MODEL are set.
+        if not self.api_key:
+            raise ValueError("ANTHROPIC_API_KEY is required for LLM_PROVIDER=anthropic")
+        if not self.model:
+            raise ValueError("ANTHROPIC_MODEL is required for LLM_PROVIDER=anthropic")
+        return True
 
-        EPIC: EPIC-004 | Provider Config Validation
-        @return: True if valid.
-        @raises ValueError: When configuration is missing.
-        """
-        # TODO: if not self.api_key: raise ValueError("ANTHROPIC_API_KEY is required for LLM_PROVIDER=anthropic")
-        # TODO: if not self.model:   raise ValueError("ANTHROPIC_MODEL is required for LLM_PROVIDER=anthropic")
-        # TODO: return True
-        raise NotImplementedError
+    async def extract_fields_from_image(
+        self,
+        image_bytes: bytes,
+        prompt: str,
+        *,
+        mime_type: str = "image/jpeg",
+    ) -> dict[str, Any]:
+        if mime_type not in _SUPPORTED_IMAGE_MIME:
+            # Anthropic rejects unsupported mime types outright; rather than
+            # let the request fail mid-flight, map PDFs (which the pipeline
+            # has already rasterised by this point) or unknown types to PNG.
+            mime_type = "image/png"
 
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=1, max=8), reraise=True)
-    async def extract_fields(self, ocr_text: str) -> dict:
-        """
-        Calls Anthropic Messages API to extract structured invoice fields.
+        b64 = base64.b64encode(image_bytes).decode("ascii")
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {"type": "base64", "media_type": mime_type, "data": b64},
+                    },
+                    {"type": "text", "text": prompt or IMAGE_USER_PROMPT},
+                ],
+            }
+        ]
+        return await self._messages_create(messages)
 
-        EPIC: EPIC-004 | Anthropic Field Extraction
-        Acceptance: "All predefined fields extracted correctly; provider swappable via .env"
+    async def extract_fields_from_text(
+        self,
+        ocr_text: str,
+        prompt: str,
+    ) -> dict[str, Any]:
+        user_text = prompt or TEXT_USER_PROMPT_TEMPLATE.format(ocr_text=ocr_text)
+        messages = [{"role": "user", "content": user_text}]
+        return await self._messages_create(messages)
 
-        Uses the same SYSTEM_PROMPT as NanoBananaProvider for consistency.
-        Claude's JSON mode is invoked by including 'Output JSON:' prefix.
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=1, max=8),
+        retry=retry_if_exception_type(LlmProviderException),
+        reraise=True,
+    )
+    async def _messages_create(self, messages: list[dict[str, Any]]) -> dict[str, Any]:
+        try:
+            response = await self._client.messages.create(
+                model=self.model,
+                max_tokens=self.max_tokens,
+                system=VISION_SYSTEM_PROMPT,
+                messages=messages,
+            )
+        except Exception as exc:
+            status_code = getattr(exc, "status_code", 0) or 0
+            raise LlmProviderException(_PROVIDER_NAME, status_code, str(exc)) from exc
 
-        @param ocr_text: Raw OCR text from invoice image.
-        @return: Dict containing extracted invoice field values.
-        @raises LlmProviderException: After 3 failed attempts.
-        """
-        # TODO: message = await self.client.messages.create(
-        #           model=self.model,
-        #           max_tokens=2048,
-        #           system=SYSTEM_PROMPT,
-        #           messages=[{"role":"user","content":f"OCR Text:\n---\n{ocr_text}\n---\nOutput JSON:"}]
-        #       )
-        # TODO: content = message.content[0].text
-        # TODO: # Strip any markdown fences Claude might add
-        # TODO: content = content.strip().lstrip('```json').rstrip('```').strip()
-        # TODO: extracted = json.loads(content)
-        # TODO: logger.info("Anthropic extraction success", extra={"model": self.model})
-        # TODO: return extracted
-        raise NotImplementedError
+        raw = _first_text_block(response)
+        if raw is None:
+            raise LlmProviderException(
+                _PROVIDER_NAME, 0, "Anthropic response contained no text block"
+            )
+
+        parsed = parse_json_response(raw, provider=_PROVIDER_NAME)
+        logger.info(
+            "anthropic extraction ok",
+            extra={"model": self.model, "fields": sum(1 for v in parsed.values() if v is not None)},
+        )
+        return parsed
+
+
+def _first_text_block(response: Any) -> str | None:
+    content = getattr(response, "content", None)
+    if not content:
+        return None
+    for block in content:
+        if getattr(block, "type", None) == "text":
+            text = getattr(block, "text", None)
+            if text:
+                return text
+    return None

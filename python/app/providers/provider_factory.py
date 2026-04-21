@@ -51,7 +51,7 @@ class LlmProviderFactory:
         except Exception as e:  # noqa: BLE001
             logger.debug(f"nano_banana provider unavailable: {e}")
         try:
-            from .nano_banana_provider import OpenAIProvider
+            from .openai_provider import OpenAIProvider
             registry["openai"] = OpenAIProvider
         except Exception as e:  # noqa: BLE001
             logger.debug(f"openai provider unavailable: {e}")
