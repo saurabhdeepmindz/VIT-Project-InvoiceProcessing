@@ -47,11 +47,41 @@ when the target URL is unreachable).
 
 ```bash
 # From frontend/
-npx playwright install chromium            # one-time browser install
-npx playwright test                        # run everything headless
-npx playwright test epic-001-auth          # scope to one EPIC
-npx playwright test --ui                   # interactive mode
-npx playwright show-report tests/e2e/test-output/report/html
+npm run e2e:install            # one-time: download Chromium
+npm run e2e                    # aggregate run — every EPIC, one report folder
+npm run e2e:per-epic           # one report folder per EPIC (maintenance)
+npm run e2e:auth               # scope to a single EPIC (+ its shortcuts)
+npm run e2e:ui                 # interactive Playwright UI
+npm run e2e:summary            # print pass/fail table + write summary.md
+npm run e2e:report             # open aggregate HTML report
+```
+
+### Two output modes
+
+**Aggregate (`npm run e2e`)** — CI-idiomatic: one JUnit XML, one HTML report,
+one results.json covering all 25 tests. JUnit's `<testsuite>` name prefixes
+every entry with its EPIC folder so GitHub Actions / Jenkins dashboards
+group by EPIC automatically. Plus `npm run e2e:summary` renders a terse
+per-EPIC table and writes `summary.md` next to the JSON.
+
+**Per-EPIC (`npm run e2e:per-epic`)** — maintenance-friendly: drives the
+orchestrator `tests/e2e/run-per-epic.mjs`, which runs Playwright once per
+EPIC folder with `E2E_OUTPUT_SCOPE=<epic>`. Artefacts land in scoped
+folders:
+
+```text
+tests/e2e/test-output/
+  report-epic-001-auth/{html,junit.xml,results.json,summary.md}
+  report-epic-002-upload/…
+  results-epic-001-auth/
+  results-epic-002-upload/
+  …
+```
+
+Open one EPIC's HTML report:
+
+```bash
+npx playwright show-report tests/e2e/test-output/report-epic-005-tracker/html
 ```
 
 Environment overrides (all optional):
@@ -67,16 +97,18 @@ Environment overrides (all optional):
 
 ## Output artefacts
 
-All artefacts are written under `tests/e2e/test-output/` (kept out of git
-via `frontend/.gitignore`).
+All artefacts are written under `tests/e2e/test-output/` (git-ignored).
+See [`test-output/README.md`](./test-output/README.md) for the full layout
+including per-EPIC folders. Quick reference:
 
-* `results/` — per-test directories. A failed run holds a Playwright trace
-  (`.zip`), a screenshot at failure (`.png`), and the session video
-  (`.webm`). Inspect via `npx playwright show-trace tests/e2e/test-output/results/<run>/trace.zip`.
-* `report/html/` — the HTML report. Open `index.html` directly or use
-  `npx playwright show-report tests/e2e/test-output/report/html`.
-* `report/junit.xml` — JUnit XML suitable for CI ingestion.
-* `report/results.json` — machine-readable JSON of every test outcome.
+* `results/` (or `results-<epic>/`) — per-test traces, failure screenshots,
+  videos. Inspect with `npx playwright show-trace <path>/trace.zip`.
+* `report/html/` (or `report-<epic>/html/`) — browsable HTML report.
+* `report/junit.xml` — JUnit XML; `<testsuite>` names prefix with EPIC
+  folder so CI dashboards group automatically.
+* `report/results.json` — machine-readable JSON.
+* `report/summary.md` — per-EPIC pass/fail table, re-generate with
+  `npm run e2e:summary`.
 
 ## RTM annotations
 

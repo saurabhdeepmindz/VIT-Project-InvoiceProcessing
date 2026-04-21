@@ -2,13 +2,26 @@
  * playwright.config.ts — Invoice Processing Platform E2E suite.
  *
  * Test specs live under tests/e2e/, organised by EPIC.
- * Artefacts (screenshots, videos, traces) land in tests/e2e/test-output/results/.
- * Reporter artefacts (HTML, JUnit XML, JSON) land in tests/e2e/test-output/report/.
+ *
+ * Output layout (default — aggregate run):
+ *   tests/e2e/test-output/results/             per-test failure artefacts
+ *   tests/e2e/test-output/report/html/         browsable HTML report
+ *   tests/e2e/test-output/report/junit.xml     CI ingestion (groups by EPIC testsuite)
+ *   tests/e2e/test-output/report/results.json  machine-readable
+ *
+ * Output layout (per-EPIC — when E2E_OUTPUT_SCOPE is set):
+ *   tests/e2e/test-output/results-<scope>/
+ *   tests/e2e/test-output/report-<scope>/{html,junit.xml,results.json}
+ *
+ * The orchestrator script `tests/e2e/run-per-epic.mjs` sets E2E_OUTPUT_SCOPE
+ * per EPIC so each EPIC's reports land in its own folder side-by-side.
  *
  * Run:
- *   npx playwright test                         # headless
+ *   npx playwright test                         # headless, aggregate
  *   npx playwright test --ui                    # UI mode
- *   npx playwright show-report tests/e2e/test-output/report/html
+ *   npm run e2e:per-epic                        # one report folder per EPIC
+ *   npm run e2e:summary                         # print per-EPIC pass/fail table
+ *   npm run e2e:report                          # open aggregate HTML report
  *
  * Requires:
  *   - Backend running on http://localhost:3001 (Nest)
@@ -21,9 +34,14 @@ import { defineConfig, devices } from '@playwright/test';
 const BASE_URL = process.env.E2E_BASE_URL ?? 'http://localhost:3000';
 const REUSE_SERVER = process.env.CI ? false : true;
 
+const scope = (process.env.E2E_OUTPUT_SCOPE ?? '').trim();
+const suffix = scope ? `-${scope}` : '';
+const resultsDir = `./tests/e2e/test-output/results${suffix}`;
+const reportDir = `./tests/e2e/test-output/report${suffix}`;
+
 export default defineConfig({
   testDir: './tests/e2e',
-  outputDir: './tests/e2e/test-output/results',
+  outputDir: resultsDir,
   fullyParallel: false,          // auth-dependent flows share seeded credentials
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -32,9 +50,9 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   reporter: [
     ['list'],
-    ['html', { outputFolder: './tests/e2e/test-output/report/html', open: 'never' }],
-    ['junit', { outputFile: './tests/e2e/test-output/report/junit.xml' }],
-    ['json',  { outputFile: './tests/e2e/test-output/report/results.json' }],
+    ['html',  { outputFolder: `${reportDir}/html`, open: 'never' }],
+    ['junit', { outputFile:   `${reportDir}/junit.xml` }],
+    ['json',  { outputFile:   `${reportDir}/results.json` }],
   ],
   use: {
     baseURL: BASE_URL,

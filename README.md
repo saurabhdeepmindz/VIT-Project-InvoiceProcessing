@@ -438,9 +438,11 @@ cd ..
 # Frontend E2E (Playwright, 25 tests — RTM-tagged per EPIC, all 7 EPICs covered)
 cd frontend
 npm run e2e:install          # one-time: download Chromium
-npm run e2e                  # headless full run
-npm run e2e:auth             # scope to a single EPIC
-npm run e2e:report           # open the HTML report
+npm run e2e                  # aggregate run — every EPIC, one report folder
+npm run e2e:per-epic         # one report folder per EPIC (maintenance view)
+npm run e2e:auth             # scope to a single EPIC (+ upload/tracker/dashboard/etc.)
+npm run e2e:summary          # pass/fail table + writes summary.md
+npm run e2e:report           # open aggregate HTML report
 cd ..
 ```
 
@@ -469,8 +471,27 @@ cd ..
 | --- | --- |
 | `frontend/tests/e2e/test-output/results/` | Per-test traces, screenshots, videos — `npx playwright show-trace <path>/trace.zip` |
 | `frontend/tests/e2e/test-output/report/html/` | Browsable Playwright HTML report |
-| `frontend/tests/e2e/test-output/report/junit.xml` | JUnit XML for CI ingestion |
+| `frontend/tests/e2e/test-output/report/junit.xml` | JUnit XML for CI ingestion — `<testsuite>` entries tagged by EPIC folder |
 | `frontend/tests/e2e/test-output/report/results.json` | Machine-readable results for dashboarding / RTM tooling |
+| `frontend/tests/e2e/test-output/report/summary.md` | Per-EPIC pass/fail/skip markdown summary (written by `e2e:summary`) |
+
+**Per-EPIC output mode** (`npm run e2e:per-epic`) — drops scoped folders side-by-side:
+
+```text
+frontend/tests/e2e/test-output/
+├── report-epic-001-auth/{html,junit.xml,results.json,summary.md}
+├── report-epic-002-upload/…
+├── report-epic-003-preprocessing/…
+├── report-epic-004-eda/…
+├── report-epic-005-tracker/…
+├── report-epic-006-dashboard/…
+├── report-epic-007-reports/…
+├── results-epic-001-auth/    # per-test artefacts scoped per EPIC
+└── …
+```
+
+Opt-in manually: set `E2E_OUTPUT_SCOPE=<epic-folder>` before any
+`npx playwright test` command and artefacts will nest under that scope.
 
 ---
 
