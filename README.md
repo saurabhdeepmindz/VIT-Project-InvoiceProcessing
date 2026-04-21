@@ -465,20 +465,43 @@ cd ..
 
 **RTM traceability:** every Playwright spec header carries an `EPIC / User Story / Requirements / Acceptance / RTM Trace` block pointing at the backend controller + service and the frontend page + API-client it exercises. The consolidated matrix lives in [`frontend/tests/e2e/RTM.md`](frontend/tests/e2e/RTM.md).
 
-**E2E artefacts** (git-ignored; populated at run time):
-
-| Path | Purpose |
-| --- | --- |
-| `frontend/tests/e2e/test-output/results/` | Per-test traces, screenshots, videos — `npx playwright show-trace <path>/trace.zip` |
-| `frontend/tests/e2e/test-output/report/html/` | Browsable Playwright HTML report |
-| `frontend/tests/e2e/test-output/report/junit.xml` | JUnit XML for CI ingestion — `<testsuite>` entries tagged by EPIC folder |
-| `frontend/tests/e2e/test-output/report/results.json` | Machine-readable results for dashboarding / RTM tooling |
-| `frontend/tests/e2e/test-output/report/summary.md` | Per-EPIC pass/fail/skip markdown summary (written by `e2e:summary`) |
-
-**Per-EPIC output mode** (`npm run e2e:per-epic`) — drops scoped folders side-by-side:
+**E2E artefacts** (git-ignored; populated at run time). Every Playwright
+invocation lands in its own **timestamped run folder** — history is
+preserved automatically:
 
 ```text
 frontend/tests/e2e/test-output/
+├── runs/
+│   ├── 2026-04-21/
+│   │   ├── run-01/{report,results}/                       aggregate run
+│   │   ├── run-02/                                        next run — never overwrites run-01
+│   │   └── run-03/                                        per-EPIC: report-epic-*/ + results-epic-*/ inside
+│   └── 2026-04-22/
+│       └── run-01/…
+├── latest/                    ← auto-refreshed copy of the most recent run
+│   └── report/html/           ← `npm run e2e:report` opens this
+└── latest.json                ← { "runDir": "runs/2026-04-21/run-03", … }
+```
+
+**Retention cap:** `E2E_KEEP_RUNS=10` by default. Older runs auto-pruned
+after each invocation (pass `0` to disable).
+
+**Per-run artefacts** (inside each `runs/<day>/run-XX/`):
+
+| Path | Purpose |
+| --- | --- |
+| `results/` | Per-test traces, screenshots, videos — `npx playwright show-trace <path>/trace.zip` |
+| `report/html/` | Browsable Playwright HTML report |
+| `report/junit.xml` | JUnit XML for CI ingestion — `<testsuite>` entries tagged by EPIC folder so CI dashboards group automatically |
+| `report/results.json` | Machine-readable results for dashboarding / RTM tooling |
+| `report/summary.md` | Per-EPIC pass/fail/skip markdown summary (written by `e2e:summary`) |
+| `report-epic-XXX/…` | Same four reporter files scoped to one EPIC (only when running `npm run e2e:per-epic`) |
+
+**Per-EPIC mode** (`npm run e2e:per-epic`) drops the per-EPIC subfolders
+all inside the SAME run folder — one timestamped snapshot per invocation:
+
+```text
+frontend/tests/e2e/test-output/runs/2026-04-21/run-03/
 ├── report-epic-001-auth/{html,junit.xml,results.json,summary.md}
 ├── report-epic-002-upload/…
 ├── report-epic-003-preprocessing/…
@@ -486,12 +509,15 @@ frontend/tests/e2e/test-output/
 ├── report-epic-005-tracker/…
 ├── report-epic-006-dashboard/…
 ├── report-epic-007-reports/…
-├── results-epic-001-auth/    # per-test artefacts scoped per EPIC
+├── results-epic-001-auth/       per-test artefacts scoped per EPIC
 └── …
 ```
 
-Opt-in manually: set `E2E_OUTPUT_SCOPE=<epic-folder>` before any
-`npx playwright test` command and artefacts will nest under that scope.
+Opt-in manually for a one-off scoped run: set `E2E_OUTPUT_SCOPE=<epic-folder>`
+before `npx playwright test`, and artefacts will nest under that scope inside
+the current run folder. Pin a specific run folder with
+`E2E_RUN_DIR=<abs-path>` if you want to add more runs to an existing
+timestamp.
 
 ---
 

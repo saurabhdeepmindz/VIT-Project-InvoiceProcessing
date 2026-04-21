@@ -2,16 +2,18 @@
 /**
  * run-per-epic.mjs
  *
- * Orchestrates a separate Playwright run for each EPIC folder so the artefacts
- * land in their own report folder side-by-side with the aggregate run.
+ * Orchestrates a separate Playwright run for each EPIC folder. All EPICs
+ * share ONE timestamped run folder (test-output/runs/YYYY-MM-DD/run-XX/),
+ * with per-EPIC subfolders inside it. Each sub-run runs Playwright with
+ *   E2E_RUN_DIR=<shared-run-dir>
+ *   E2E_OUTPUT_SCOPE=<epic-folder>
  *
  * Output:
- *   tests/e2e/test-output/report-epic-001-auth/{html,junit.xml,results.json,summary.md}
- *   tests/e2e/test-output/report-epic-002-upload/...
- *   tests/e2e/test-output/report-<epic>/...
- *
- * Each sub-run invokes Playwright with E2E_OUTPUT_SCOPE=<epic-folder-name>,
- * which is honoured by playwright.config.ts's reporter paths.
+ *   tests/e2e/test-output/runs/YYYY-MM-DD/run-XX/
+ *     report-epic-001-auth/{html,junit.xml,results.json,summary.md}
+ *     report-epic-002-upload/…
+ *     results-epic-001-auth/
+ *     …
  *
  * Exit status:
  *   0 — every EPIC passed (or skipped gracefully)
@@ -19,13 +21,17 @@
  *
  * Usage:
  *   node tests/e2e/run-per-epic.mjs                           # every EPIC
- *   node tests/e2e/run-per-epic.mjs epic-001-auth epic-002-upload   # a subset
+ *   node tests/e2e/run-per-epic.mjs epic-001-auth epic-002-upload
  */
 
 import { readdirSync, statSync, existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+const { computeRunDir, getOutputRoot } = require('./lib/run-dir.js');
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const E2E_DIR = __dirname;                                    // tests/e2e
@@ -38,7 +44,7 @@ function discoverEpicFolders() {
     .sort();
 }
 
-function runOne(epic) {
+function runOne(epic, sharedRunDir) {
   console.log(`\n──── ${epic} ──────────────────────────────────────────`);
   // NOTE: do NOT pass --reporter here — that would override the config's
   // html/junit/json reporters, leaving the scoped report folder empty.
@@ -47,7 +53,11 @@ function runOne(epic) {
     ['playwright', 'test', epic],
     {
       cwd: FRONTEND_DIR,
-      env: { ...process.env, E2E_OUTPUT_SCOPE: epic },
+      env: {
+        ...process.env,
+        E2E_RUN_DIR: sharedRunDir,
+        E2E_OUTPUT_SCOPE: epic,
+      },
       stdio: 'inherit',
       shell: true,
     },
@@ -55,13 +65,8 @@ function runOne(epic) {
   return result.status === 0;
 }
 
-function summarizeOne(epic) {
-  const jsonPath = resolve(
-    E2E_DIR,
-    'test-output',
-    `report-${epic}`,
-    'results.json',
-  );
+function summarizeOne(epic, sharedRunDir) {
+  const jsonPath = resolve(sharedRunDir, `report-${epic}`, 'results.json');
   if (!existsSync(jsonPath)) {
     console.warn(`  ⚠ no results.json at ${jsonPath}`);
     return;
@@ -81,12 +86,15 @@ function main() {
     process.exit(2);
   }
 
-  console.log(`Running ${epics.length} EPIC(s): ${epics.join(', ')}`);
+  const sharedRunDir = computeRunDir(getOutputRoot());
+  console.log(
+    `Running ${epics.length} EPIC(s) into ${sharedRunDir}:\n  ${epics.join(', ')}`,
+  );
   const outcomes = [];
   for (const epic of epics) {
-    const ok = runOne(epic);
+    const ok = runOne(epic, sharedRunDir);
     outcomes.push({ epic, ok });
-    summarizeOne(epic);
+    summarizeOne(epic, sharedRunDir);
   }
 
   console.log('\n════ Per-EPIC run summary ═══════════════════════════════');
@@ -95,10 +103,12 @@ function main() {
   }
   const failed = outcomes.filter((o) => !o.ok).length;
   if (failed) {
-    console.log(`\n${failed} EPIC(s) had failures. See per-EPIC report folders.`);
+    console.log(
+      `\n${failed} EPIC(s) had failures. See ${sharedRunDir}/report-<epic>/.`,
+    );
     process.exit(1);
   }
-  console.log('\nAll EPICs green. Reports under tests/e2e/test-output/report-<epic>/.');
+  console.log(`\nAll EPICs green. Reports under ${sharedRunDir}/report-<epic>/.`);
 }
 
 main();

@@ -21,7 +21,7 @@
     "e2e:dashboard": "playwright test epic-006-dashboard",
     "e2e:reports": "playwright test epic-007-reports",
     "e2e:install": "playwright install chromium",
-    "e2e:report": "playwright show-report tests/e2e/test-output/report/html",
+    "e2e:report": "playwright show-report tests/e2e/test-output/latest/report/html",
     "e2e:summary": "python tests/e2e/summarize.py",
     "e2e:per-epic": "node tests/e2e/run-per-epic.mjs"
   },

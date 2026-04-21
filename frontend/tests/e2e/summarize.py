@@ -6,8 +6,12 @@ plus the aggregate totals. Also writes a Markdown summary next to the
 JSON so PR bots and CI annotations can ingest it.
 
 Usage:
-    python tests/e2e/summarize.py                               # default: aggregate run
-    python tests/e2e/summarize.py tests/e2e/test-output/report/epic-001-auth/results.json
+    python tests/e2e/summarize.py                                # latest run
+    python tests/e2e/summarize.py <path/to/results.json>         # specific file
+
+Default lookup order when no argument is given:
+    1. tests/e2e/test-output/latest/report/results.json
+    2. via latest.json → tests/e2e/test-output/<run-dir>/report/results.json
 
 Exit status:
     0 if every test passed or was skipped, 1 if any test failed
@@ -27,7 +31,28 @@ def resolve_input(arg: str | None) -> Path:
     if arg:
         return Path(arg)
     here = Path(__file__).resolve().parent
-    return here / "test-output" / "report" / "results.json"
+    test_output = here / "test-output"
+
+    # Preferred: the `latest/` copy refreshed by global-teardown.
+    latest_dir = test_output / "latest" / "report" / "results.json"
+    if latest_dir.exists():
+        return latest_dir
+
+    # Fallback: read latest.json and resolve the pointer.
+    pointer = test_output / "latest.json"
+    if pointer.exists():
+        try:
+            payload = json.loads(pointer.read_text(encoding="utf-8"))
+            run_dir = payload.get("runDir")
+            if run_dir:
+                candidate = test_output / run_dir / "report" / "results.json"
+                if candidate.exists():
+                    return candidate
+        except json.JSONDecodeError:
+            pass
+
+    # Last resort: legacy flat path (for first-run / diagnostic scenarios).
+    return test_output / "report" / "results.json"
 
 
 def collect(results_path: Path) -> tuple[dict[str, dict[str, float]], dict[str, int]]:
