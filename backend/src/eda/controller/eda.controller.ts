@@ -6,7 +6,7 @@
  *  GET    /eda/batches/:id/summary       — extraction counts + avg confidence
  *  GET    /eda/batches/:id/records       — extraction_results rows for the batch
  *  GET    /eda/batches/:id/output.csv    — download generated CSV
- *  POST   /eda/batches/:id/run           — admin: re-run EDA for a batch
+ *  POST   /eda/batches/:id/run           — admin/operator: re-run EDA for a batch
  */
 
 import {
@@ -83,9 +83,9 @@ export class EdaController {
   }
 
   @Post(':batchId/run')
-  @Roles('ADMIN')
+  @Roles('INVOICE_OPERATOR', 'ADMIN')
   @HttpCode(HttpStatus.ACCEPTED)
-  @ApiOperation({ summary: 'Re-run EDA for a batch (admin)' })
+  @ApiOperation({ summary: 'Re-run EDA for a batch (admin / operator)' })
   async run(@Param('batchId', ParseUUIDPipe) batchId: string): Promise<{ batchId: string }> {
     // Reset eda_status on records so they get picked up again
     await this.dataSource.getRepository(InvoiceRecordEntity).update(

@@ -6,7 +6,7 @@
  *  GET /preprocessing/batches/:id          — processing_status view
  *  GET /preprocessing/batches/:id/audit    — audit log
  *  GET /preprocessing/batches/:id/dlq      — dead-letter entries
- *  POST /preprocessing/batches/:id/retry   — admin: re-queue a batch (wipes error records to PENDING)
+ *  POST /preprocessing/batches/:id/retry   — admin/operator: re-queue a batch (wipes error records to PENDING)
  */
 
 import {
@@ -84,9 +84,9 @@ export class PreprocessingController {
   }
 
   @Post(':batchId/retry')
-  @Roles('ADMIN')
+  @Roles('INVOICE_OPERATOR', 'ADMIN')
   @HttpCode(HttpStatus.ACCEPTED)
-  @ApiOperation({ summary: 'Re-queue a batch (resets DEAD_LETTERED / ERROR records to PENDING)' })
+  @ApiOperation({ summary: 'Re-queue a batch (resets DEAD_LETTERED / ERROR records to PENDING) — admin / operator' })
   async retryBatch(@Param('batchId', ParseUUIDPipe) batchId: string): Promise<{ batchId: string; queued: number }> {
     const batchRepo = this.dataSource.getRepository(InvoiceBatchEntity);
     const batch = await batchRepo.findOne({ where: { id: batchId } });

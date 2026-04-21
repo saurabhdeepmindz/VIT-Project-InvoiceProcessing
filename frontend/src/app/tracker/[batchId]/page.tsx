@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getTrackerDetail, type FileStatusDetail, type ApiError } from '@/services/tracker.api';
 import { rerunEda } from '@/services/eda.api';
-import { me, type AuthUser } from '@/services/auth.api';
+import { retryPreprocessing } from '@/services/preprocessing.api';
 
 function classNames(...xs: (string | false | null | undefined)[]): string {
   return xs.filter(Boolean).join(' ');
@@ -36,7 +36,6 @@ export default function TrackerDetailPage({ params }: PageProps) {
   const [detail, setDetail] = useState<FileStatusDetail | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [retrying, setRetrying] = useState(false);
   const [retryMsg, setRetryMsg] = useState<string | null>(null);
 
@@ -57,7 +56,6 @@ export default function TrackerDetailPage({ params }: PageProps) {
     const token = window.localStorage.getItem('invoice.accessToken');
     if (!token) { router.replace('/login'); return; }
     void load();
-    void me().then(setCurrentUser).catch(() => setCurrentUser(null));
   }, [load, router]);
 
   useEffect(() => {
@@ -85,15 +83,29 @@ export default function TrackerDetailPage({ params }: PageProps) {
       .catch((e: Error) => setErr(e.message));
   };
 
-  const onRetry = async (): Promise<void> => {
+  const onRetryEda = async (): Promise<void> => {
     setRetrying(true); setRetryMsg(null); setErr(null);
     try {
       await rerunEda(batchId);
-      setRetryMsg('Re-run queued. Refreshing status…');
+      setRetryMsg('EDA re-run queued. Refreshing status…');
       await load();
     } catch (e) {
       const ae = e as ApiError;
-      setErr(`Retry failed: ${ae.message ?? 'unknown error'}`);
+      setErr(`Retry EDA failed: ${ae.message ?? 'unknown error'}`);
+    } finally {
+      setRetrying(false);
+    }
+  };
+
+  const onRetryPreprocessing = async (): Promise<void> => {
+    setRetrying(true); setRetryMsg(null); setErr(null);
+    try {
+      const res = await retryPreprocessing(batchId);
+      setRetryMsg(`Preprocessing re-queue queued (${res.queued} record${res.queued === 1 ? '' : 's'}). Refreshing status…`);
+      await load();
+    } catch (e) {
+      const ae = e as ApiError;
+      setErr(`Retry preprocessing failed: ${ae.message ?? 'unknown error'}`);
     } finally {
       setRetrying(false);
     }
@@ -144,19 +156,29 @@ export default function TrackerDetailPage({ params }: PageProps) {
                   <h2 className="font-display font-semibold text-lg">{detail.summary.fileName.split('/').pop()}</h2>
                   <p className="text-xs text-ink-600 font-mono break-all">{detail.summary.batchId}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  {currentUser?.role === 'ADMIN' && (
-                    (detail.records.some(r => r.edaStatus === 'FAILED')
-                      || ['PARTIAL', 'FAILED'].includes(detail.summary.batchStatus)) && (
-                      <button
-                        className="px-3 py-1.5 rounded-md border border-accent-500 text-accent-600 hover:bg-accent-100 text-sm font-medium disabled:opacity-60"
-                        onClick={onRetry}
-                        disabled={retrying}
-                        title="Re-run EDA on records with eda_status=FAILED or PENDING. Successful extractions are preserved."
-                      >
-                        {retrying ? 'Retrying…' : '↻ Retry failed records'}
-                      </button>
-                    )
+                <div className="flex items-center gap-2 flex-wrap justify-end">
+                  {(detail.records.some(r => r.preprocessingStatus === 'FAILED' || r.preprocessingStatus === 'DEAD_LETTERED')
+                    || detail.summary.deadLetteredRecords > 0
+                    || detail.summary.preprocessingStatus === 'FAILED') && (
+                    <button
+                      className="px-3 py-1.5 rounded-md border border-accent-500 text-accent-600 hover:bg-accent-100 text-sm font-medium disabled:opacity-60"
+                      onClick={onRetryPreprocessing}
+                      disabled={retrying}
+                      title="Re-queue preprocessing on records in DEAD_LETTERED or ERROR state. Records already preprocessed are preserved."
+                    >
+                      {retrying ? 'Retrying…' : '↻ Retry preprocessing'}
+                    </button>
+                  )}
+                  {(detail.records.some(r => r.edaStatus === 'FAILED')
+                    || ['PARTIAL', 'FAILED'].includes(detail.summary.batchStatus)) && (
+                    <button
+                      className="px-3 py-1.5 rounded-md border border-accent-500 text-accent-600 hover:bg-accent-100 text-sm font-medium disabled:opacity-60"
+                      onClick={onRetryEda}
+                      disabled={retrying}
+                      title="Re-run EDA on records with eda_status=FAILED or PENDING. Successful extractions are preserved."
+                    >
+                      {retrying ? 'Retrying…' : '↻ Retry EDA'}
+                    </button>
                   )}
                   {detail.summary.outputCsvPath && (
                     <button className="btn-primary" onClick={downloadCsv}>Download CSV</button>
