@@ -47,3 +47,13 @@ reports/
 
 # TypeORM / build artefacts
 *.tsbuildinfo
+
+# Playwright artefacts (do NOT commit screenshots, videos, traces)
+frontend/tests/e2e/test-output/**/*
+!frontend/tests/e2e/test-output/
+!frontend/tests/e2e/test-output/.gitkeep
+!frontend/tests/e2e/test-output/README.md
+frontend/playwright-report/
+frontend/test-results/
+frontend/blob-report/
+frontend/.last-run.json
