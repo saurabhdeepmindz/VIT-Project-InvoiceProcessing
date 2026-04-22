@@ -177,11 +177,31 @@ cd ..
 
 ### 4.4 Boot the three services (three terminals)
 
+> **Run all three commands from the repo root** (the folder that contains
+> `package.json` + `python/` + `frontend/` + `backend/`). `npm run backend:dev`
+> and `npm run frontend:dev` are workspace-orchestrator scripts defined only
+> in the root `package.json`, and uvicorn needs the repo-root CWD so
+> `pydantic-settings` finds the root `.env` — otherwise it silently falls
+> back to `USE_STUB_PROVIDER=true`.
+
 | Terminal | From | Command | Port |
 | --- | --- | --- | --- |
-| Backend | repo root | `npm run backend:dev` | **3001** |
-| Python AI | `python/` | `.\.venv\Scripts\python.exe -m uvicorn app.main:app --port 8001 --reload` | **8001** |
-| Frontend | repo root | `npm run frontend:dev` | **3000** |
+| Backend | **repo root** | `npm run backend:dev` | **3001** |
+| Python AI | **repo root** | `./python/.venv/Scripts/python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload` | **8001** |
+| Frontend | **repo root** | `npm run frontend:dev` | **3000** |
+
+#### Troubleshooting
+
+- `Missing script: "backend:dev"` — you ran the command from inside `backend/`
+  instead of the repo root. Either `cd ..` and retry, or stay in `backend/`
+  and use the workspace script directly: `npm run start:dev`.
+- `/eda/provider` returns `{"provider":"stub","use_stub":true}` even with
+  `USE_STUB_PROVIDER=false` in `.env` — uvicorn was launched from `python/`
+  and didn't find the root `.env`. Kill it, `cd` to the repo root, and
+  relaunch using the command above.
+- PowerShell vs. bash path escaping — on PowerShell use
+  `.\python\.venv\Scripts\python.exe ...`; on bash / Git Bash use
+  `./python/.venv/Scripts/python.exe ...`.
 
 On first boot of the backend, two demo users are auto-seeded:
 
