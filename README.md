@@ -1,4 +1,4 @@
-# Bridgestone Invoice Processing Platform — v3.1
+# Invoice Processing Platform — v3.1
 
 Vision-LLM invoice ingestion, extraction, tracking, dashboard, and reporting platform built to the LLD at [`docs/InvoiceProcessing_LLD_v3.0.docx`](docs/InvoiceProcessing_LLD_v3.0.docx) + [`docs/InvoiceProcessing_LLD_v3.1_Addendum.docx`](docs/InvoiceProcessing_LLD_v3.1_Addendum.docx).
 
