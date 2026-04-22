@@ -1,0 +1,3 @@
+# PostgreSQL custom-format dumps are binary archives — tell git not to
+# diff them, normalise line endings, or treat them as text.
+database-backup/*.sql -text -diff binary

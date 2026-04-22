@@ -33,6 +33,7 @@ __pycache__/
 venv/
 .venv/
 env/
+invoice-venv/           # occasionally-created stray venv at repo root
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/

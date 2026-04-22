@@ -160,6 +160,12 @@ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO invoice_user;
 SQL
 ```
 
+> **Shortcut for demos — skip steps 3 and 4 above.** If you just want the
+> full demo dataset (seeded users + uploaded batches + Gemini-extracted
+> records) without running the pipeline yourself, restore the dump at
+> [`database-backup/invoice-processing-data-backup.sql`](database-backup/README.md)
+> with `pg_restore` — see that folder's README for the exact command.
+
 ### 4.3 Install dependencies
 
 ```bash
