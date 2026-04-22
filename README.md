@@ -187,21 +187,37 @@ cd ..
 | Terminal | From | Command | Port |
 | --- | --- | --- | --- |
 | Backend | **repo root** | `npm run backend:dev` | **3001** |
-| Python AI | **repo root** | `./python/.venv/Scripts/python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload` | **8001** |
+| Python AI | **repo root** | see per-shell table below | **8001** |
 | Frontend | **repo root** | `npm run frontend:dev` | **3000** |
+
+The Python AI service needs to be launched with the right venv's `python.exe`,
+and shell-specific path syntax differs:
+
+| Shell | Command (from repo root) |
+| --- | --- |
+| **Windows cmd.exe** | `python\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload` |
+| **PowerShell** | `.\python\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload` |
+| **bash / Git Bash** | `./python/.venv/Scripts/python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload` |
 
 #### Troubleshooting
 
-- `Missing script: "backend:dev"` — you ran the command from inside `backend/`
-  instead of the repo root. Either `cd ..` and retry, or stay in `backend/`
-  and use the workspace script directly: `npm run start:dev`.
-- `/eda/provider` returns `{"provider":"stub","use_stub":true}` even with
-  `USE_STUB_PROVIDER=false` in `.env` — uvicorn was launched from `python/`
+- **`Missing script: "backend:dev"`** — you ran the command from inside
+  `backend/` instead of the repo root. Either `cd ..` and retry, or stay in
+  `backend/` and use the workspace script directly: `npm run start:dev`.
+- **`'.' is not recognized as an internal or external command`** — Windows
+  cmd.exe doesn't parse the Unix `./path/...` prefix. Use the cmd row in the
+  per-shell table above (plain `python\.venv\...` with backslashes, no
+  leading `./`).
+- **`/eda/provider` returns `{"provider":"stub","use_stub":true}` even with
+  `USE_STUB_PROVIDER=false` in `.env`** — uvicorn was launched from `python/`
   and didn't find the root `.env`. Kill it, `cd` to the repo root, and
   relaunch using the command above.
-- PowerShell vs. bash path escaping — on PowerShell use
-  `.\python\.venv\Scripts\python.exe ...`; on bash / Git Bash use
-  `./python/.venv/Scripts/python.exe ...`.
+- **Wrong venv active (e.g. `(invoice-venv)` prefix in your shell)** — if
+  you've activated a different venv than `python\.venv\`, either `deactivate`
+  first, or verify the active venv has the project's deps installed
+  (`fastapi`, `uvicorn`, `pydantic-settings`, `httpx`, `tenacity`, `openai`,
+  `anthropic`, `pypdfium2`, `pillow`). From repo root:
+  `cd python; pip install -e ".[dev]"; cd ..`.
 
 On first boot of the backend, two demo users are auto-seeded:
 
