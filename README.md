@@ -16,6 +16,12 @@ Vision-LLM invoice ingestion, extraction, tracking, dashboard, and reporting pla
 | Small | `db7e8e9` | `/auth/forgot` + `/auth/reset` flow (pages + enumeration-safe API); login polish (Remember-me, Forgot-password link, password toggle, branded header); **refresh-token SHA-256 fix** (bcrypt-72-byte-truncation security bug) |
 | Medium | `42520aa` | Real LLM providers (NanoBanana httpx, OpenAI SDK, Anthropic SDK) with vision-first base64 image blocks, shared tolerant JSON parser, 14 new unit tests |
 | Larger | `f884d96` | Playwright E2E suite (19 tests, EPIC-organised, full RTM trace); Next.js 14.2 → 16.2 + React 18 → 19 + ESLint 8 → 9 (frontend audit → 0 vulns, clears 5 Next.js CVEs) |
+| RTM coverage | `7a55d23` | EPIC-003 + EPIC-004 lifecycle/observation Playwright specs (now all 7 EPICs covered, 25 tests across 10 files) |
+| E2E green run | `d0f062c` | Live-stack run: 22 pass / 0 fail / 3 skip; fixed real Next.js 16 `params` Promise regression on tracker detail; Turbopack → webpack on Windows |
+| E2E modes | `f5b2868` | Aggregate + per-EPIC dual output modes; `summarize.py` writes Markdown summary; `e2e:per-epic` orchestrator |
+| E2E history | `2246741` | History-preserving per-run output folders (`runs/YYYY-MM-DD/run-XX/`) with `latest/` pointer + `E2E_KEEP_RUNS` retention cap |
+| Tracker UX | `e1554d1` | Tracker-detail: inline error message on failed rows (no need to expand) + initial admin retry button |
+| Retry UX | `fd2ac80` | Retry buttons available to **operator + admin**; second button **↻ Retry preprocessing** alongside **↻ Retry EDA** — each appears only when its stage has recoverable failures; backend roles widened on `/eda/.../run` and `/preprocessing/.../retry` |
 
 ---
 
@@ -27,7 +33,7 @@ Vision-LLM invoice ingestion, extraction, tracking, dashboard, and reporting pla
 | 002 | Ingestion | Upload a CSV **manifest** of invoice URLs; SHA-256 content-hash duplicate detection; event-driven downstream pipeline |
 | 003 | Preprocessing | Async URL fetch (SSRF allowlist, 30 MB cap, 3 retries with exponential backoff), SHA-256 image dedup, PDF page detection, dead-letter queue for permanent failures |
 | 004 | EDA | Vision-first extraction via Python AI (OCR corroboration + rule engine + confidence scorer); per-batch output CSV auto-generated |
-| 005 | Tracker | Paginated file-status board + per-batch detail with **13 extracted fields** per record, audit log, DLQ drill-down |
+| 005 | Tracker | Paginated file-status board + per-batch detail with **13 extracted fields** per record, audit log, DLQ drill-down, **inline error message on failed rows**, and **two retry buttons** (preprocessing + EDA) available to operator and admin |
 | 006 | Dashboard | Date-range metrics, daily/weekly trend chart (batches vs errors), top-error batches |
 | 007 | Reporting | 3 report types × 2 formats (single-file / weekly / error × CSV / Excel) + download history |
 
@@ -248,11 +254,11 @@ All endpoints are prefixed `/api/v1` and require a JWT Bearer token (except `/he
 | GET | `/preprocessing/batches/:id` | operator / admin | preprocessing view |
 | GET | `/preprocessing/batches/:id/audit` | operator / admin | audit log |
 | GET | `/preprocessing/batches/:id/dlq` | admin | DLQ entries |
-| POST | `/preprocessing/batches/:id/retry` | admin | re-queue errored records |
+| POST | `/preprocessing/batches/:id/retry` | operator / admin | re-queue errored records (resets DEAD_LETTERED / ERROR → PENDING) |
 | GET | `/eda/batches/:id/summary` | operator / admin | extraction counts + avg confidence |
 | GET | `/eda/batches/:id/records` | operator / admin | per-record extraction results |
 | GET | `/eda/batches/:id/output.csv` | operator / admin | download generated CSV |
-| POST | `/eda/batches/:id/run` | admin | re-run EDA |
+| POST | `/eda/batches/:id/run` | operator / admin | re-run EDA on FAILED / PENDING records (preserves successful extractions) |
 | GET | `/tracker/files` | operator / admin | paginated file-status board |
 | GET | `/tracker/files/:id` | operator / admin | detail: summary + records (with 13 fields) + audit + DLQ |
 | GET | `/dashboard/metrics` | operator / admin | totals, averages, status breakdown |
@@ -411,6 +417,23 @@ ANTHROPIC_API_KEY=sk-ant-...
 ANTHROPIC_MODEL=claude-sonnet-4-6
 ```
 
+```env
+# Nano Banana (Google's codename) → Gemini's OpenAI-compatible endpoint
+USE_STUB_PROVIDER=false
+LLM_PROVIDER=nano_banana
+NB_API_KEY=AIza...                           # Google AI Studio key
+NB_API_BASE=https://generativelanguage.googleapis.com/v1beta/openai
+NB_MODEL=gemini-2.5-flash                    # vision + JSON mode, fast + cheap
+NB_MAX_TOKENS=4096                           # rich invoices need >2048
+```
+
+> Note on Gemini model names: `gemini-2.5-flash` and `gemini-2.5-pro` are publicly
+> available with vision + structured-JSON support — the right fit for our
+> extraction pipeline. `gemini-3-pro-image-preview` exists but is positioned for
+> image *generation*, not invoice *extraction*. The default `NB_API_BASE` in
+> `.env.sample` (`api.nanobanana.ai`) is a placeholder — switch to Gemini's
+> OpenAI-compatible endpoint above for the real-LLM path.
+
 Restart the Python service. Verify:
 
 ```text
@@ -560,5 +583,29 @@ git push
 | 5 | DLQ cosmetic — real `attempts` count | ✅ Done (`90cb491`) | `ImageFetchService` tracks `actualAttempts`; `PreprocessingService` extracts real count from caught exception |
 | 6 | E2E Playwright suite | ✅ Done (`f884d96`) | 19 tests, EPIC-organised (`tests/e2e/epic-00N-*/`), full RTM trace in every spec header + consolidated [`RTM.md`](frontend/tests/e2e/RTM.md) |
 | 7 | Auth EPIC-001 extras | ✅ Done (`db7e8e9`) | Password reset flow (`/auth/forgot` + `/auth/reset` + `/forgot-password` + `/reset-password` pages); refresh-rotation unit test; **security fix:** refresh-token hashing replaced with SHA-256 + `timingSafeEqual` (bcrypt truncates at 72 bytes, which silently broke refresh-token rotation since JWTs for the same user share a long common prefix) |
+| 8 | E2E full-EPIC coverage | ✅ Done (`7a55d23`, `d0f062c`) | EPIC-003 + EPIC-004 lifecycle/observation specs added → all 7 EPICs covered; 25 tests in 10 files; live-stack run **22 pass / 0 fail / 3 skip** (skipped tests are precondition-gated, not failures); fixed a real Next 16 `params` Promise regression and a Turbopack Windows path-length crash on the way |
+| 9 | E2E dual output modes | ✅ Done (`f5b2868`) | `npm run e2e` (aggregate, CI-idiomatic) + `npm run e2e:per-epic` (one report folder per EPIC, maintenance view); shared `summarize.py` writes `summary.md` per scope |
+| 10 | E2E history-preserving runs | ✅ Done (`2246741`) | Every invocation writes to `tests/e2e/test-output/runs/YYYY-MM-DD/run-XX/`; auto-refreshed `latest/` copy; `E2E_KEEP_RUNS` retention cap (default 10) |
+| 11 | Tracker UX — error visibility | ✅ Done (`e1554d1`) | Per-record `errorMessage` rendered inline on collapsed rows (no need to expand) on a red-tinted bar; full text on hover; first iteration of admin retry button shipped |
+| 12 | Retry UX — both stages, both roles | ✅ Done (`fd2ac80`) | Two retry buttons on tracker detail (**↻ Retry preprocessing** + **↻ Retry EDA**); each appears only when its stage has recoverable failures; backend roles widened so **operator can retry too** (no longer admin-only); only re-processes records still in FAILED/PENDING — no wasted work or LLM tokens on the records that already succeeded |
+| 13 | Demo CSV fixtures | ✅ Done (`e9b2517`) | `backend/demo-live.csv` + `backend/demo-live-2.csv` for repeatable live-upload demos with distinct content hashes |
+
+### Live-LLM verification (Gemini wire-up)
+
+The Nano Banana provider was probed end-to-end against Gemini 2.5-flash on
+2026-04-21 — `phase3-smoke.csv` (2 invoices) extracted to **batch DONE,
+84.41% avg confidence, 21 s** with all 13 fields populated per record.
+Discovered + fixed during the probe:
+
+- `gemini-3-pro-image-preview` is publicly available but is positioned for
+  image *generation*; for invoice *extraction* `gemini-2.5-flash` is the right
+  fit (vision + structured JSON, fast, cheap).
+- `NB_MAX_TOKENS=2048` was truncating richer invoices mid-JSON; bumped to
+  4096 in the working `.env`. The `.env.sample` default is unchanged so
+  fresh checkouts still default to 2048 — bump per-deploy as needed.
+- Free-tier Gemini occasionally returns HTTP 503 `UNAVAILABLE` on
+  concurrent calls. Tenacity retries 3× with exponential backoff; if it
+  still fails the batch lands in PARTIAL and the new **↻ Retry EDA**
+  button picks up from there.
 
 Remaining deliberate deferrals: none blocking demo.
