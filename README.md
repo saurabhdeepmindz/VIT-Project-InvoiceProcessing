@@ -218,6 +218,18 @@ and shell-specific path syntax differs:
   (`fastapi`, `uvicorn`, `pydantic-settings`, `httpx`, `tenacity`, `openai`,
   `anthropic`, `pypdfium2`, `pillow`). From repo root:
   `cd python; pip install -e ".[dev]"; cd ..`.
+- **`ModuleNotFoundError: No module named 'app'`** — the `uvicorn` binary in
+  your PATH belongs to a Python that doesn't have the `app` package
+  installed. Happens when the plain `uvicorn app.main:app …` command
+  resolves to the **system Python** (because that's earlier on PATH) while
+  you think a venv is handling it. Look at the first traceback line: if it
+  says `C:\Users\…\Python311\Scripts\uvicorn.exe`, the system Python caught
+  the call. Fix: call the repo's venv `python.exe` by explicit path — it has
+  `app` editable-installed — so PATH and activation can't interfere:
+
+  ```cmd
+  python\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8001
+  ```
 
 On first boot of the backend, two demo users are auto-seeded:
 
